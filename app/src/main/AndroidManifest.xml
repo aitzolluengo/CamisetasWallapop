@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.tzolas.camisetaswallapop">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CamisetasWallapop"
+        tools:targetApi="31">
+
+        <!-- Pantalla de inicio (Login) -->
+        <activity
+            android:name=".activities.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Registro -->
+        <activity android:name=".activities.RegisterActivity" />
+
+        <!-- Pantalla principal (lista de camisetas) -->
+        <activity android:name=".activities.MainActivity" />
+
+        <!-- Añadir camiseta -->
+        <!--<activity android:name=".activities.AddCamisetaActivity" />-->
+
+        <!-- Detalle de camiseta -->
+       <!--<activity android:name=".activities.CamisetaDetailActivity" /> -->
+
+        <!-- Perfil del usuario -->
+        <!-- <activity android:name=".activities.ProfileActivity" />-->
+
+     </application>
+
+ </manifest>
