@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1039915591147",
+    "project_id": "camisetawallapop-c3efd",
+    "storage_bucket": "camisetawallapop-c3efd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039915591147:android:704266ea117f5b436925ae",
+        "android_client_info": {
+          "package_name": "com.tzolas.camisetaswallapop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7J6HsyelxTQ0gH0n7jNFgQTg-kV0HRxY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

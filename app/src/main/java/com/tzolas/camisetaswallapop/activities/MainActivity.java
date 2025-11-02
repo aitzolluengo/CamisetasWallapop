@@ -1,44 +1,46 @@
 package com.tzolas.camisetaswallapop.activities;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.fragment.app.Fragment;
+import android.os.Bundle;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.tzolas.camisetaswallapop.R;
-import com.tzolas.camisetaswallapop.adapters.CamisetaAdapter;
-import com.tzolas.camisetaswallapop.models.Camiseta;
-import java.util.ArrayList;
-import java.util.List;
+import com.tzolas.camisetaswallapop.fragments.BuscarFragment;
+import com.tzolas.camisetaswallapop.fragments.ChatFragment;
+import com.tzolas.camisetaswallapop.fragments.HomeFragment;
+import com.tzolas.camisetaswallapop.fragments.PerfilFragment;
 
 public class MainActivity extends AppCompatActivity {
-
-    RecyclerView recyclerView;
-    Button btnAdd;
-    List<Camiseta> lista;
-    CamisetaAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recyclerView = findViewById(R.id.recyclerCamisetas);
-        btnAdd = findViewById(R.id.btnAdd);
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        loadFragment(new HomeFragment());
 
-        lista = new ArrayList<>();
-        lista.add(new Camiseta("Athletic Club", "L", 25, R.drawable.ic_launcher_background));
-        lista.add(new Camiseta("Real Madrid", "M", 30, R.drawable.ic_launcher_background));
-        lista.add(new Camiseta("Barcelona", "S", 28, R.drawable.ic_launcher_background));
-        lista.add(new Camiseta("Betis", "L", 22, R.drawable.ic_launcher_background));
+        bottomNav.setOnItemSelectedListener(item -> {
+            Fragment selected = null;
+            int id = item.getItemId();
 
-        adapter = new CamisetaAdapter(this, lista);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+            if (id == R.id.nav_inicio) selected = new HomeFragment();
+            else if (id == R.id.nav_buscar) selected = new BuscarFragment();
+            else if (id == R.id.nav_chat) selected = new ChatFragment();
+            else if (id == R.id.nav_perfil) selected = new PerfilFragment();
 
-        btnAdd.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, AddCamisetaActivity.class));
+            if (selected != null)
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selected).commit();
+
+            return true;
         });
+
+    }
+
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 }

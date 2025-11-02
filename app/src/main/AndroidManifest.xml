@@ -31,7 +31,7 @@
         <activity android:name=".activities.MainActivity" />
 
         <!-- Añadir camiseta -->
-        <!--<activity android:name=".activities.AddCamisetaActivity" />-->
+        <activity android:name=".activities.AddCamisetaActivity" />
 
         <!-- Detalle de camiseta -->
        <!--<activity android:name=".activities.CamisetaDetailActivity" /> -->
