@@ -12,7 +12,20 @@
           "package_name": "com.tzolas.camisetaswallapop"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1039915591147-2iaam0pfot8kmfdji1u1t47vrrguctl9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tzolas.camisetaswallapop",
+            "certificate_hash": "de2811274998a154448c35ee01fa9241d40b712a"
+          }
+        },
+        {
+          "client_id": "1039915591147-4rcgbk0v5bglftifiqcteukabmoeqa8f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB7J6HsyelxTQ0gH0n7jNFgQTg-kV0HRxY"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1039915591147-4rcgbk0v5bglftifiqcteukabmoeqa8f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

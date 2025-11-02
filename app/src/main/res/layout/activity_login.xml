@@ -38,6 +38,14 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp" />
 
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/btnGoogleSignIn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginHorizontal="16dp" />
+
+
     <TextView
         android:id="@+id/tvRegister"
         android:text="¿No tienes cuenta? Regístrate"

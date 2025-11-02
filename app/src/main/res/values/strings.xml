@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CamisetasWallapop</string>
+    <string name="default_web_client_id">1039915591147-4rcgbk0v5bglftifiqcteukabmoeqa8f.apps.googleusercontent.com</string>
+
 </resources>

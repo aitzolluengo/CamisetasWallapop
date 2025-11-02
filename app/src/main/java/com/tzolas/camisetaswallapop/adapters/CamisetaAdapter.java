@@ -6,53 +6,59 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.models.Camiseta;
+
 import java.util.List;
 
 public class CamisetaAdapter extends RecyclerView.Adapter<CamisetaAdapter.ViewHolder> {
 
     private Context context;
-    private List<Camiseta> lista;
+    private List<Camiseta> camisetaList;
 
-    public CamisetaAdapter(Context context, List<Camiseta> lista) {
+    public CamisetaAdapter(Context context, List<Camiseta> camisetaList) {
         this.context = context;
-        this.lista = lista;
+        this.camisetaList = camisetaList;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(context).inflate(R.layout.item_camiseta, parent, false);
-        return new ViewHolder(v);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_camiseta, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Camiseta c = lista.get(position);
-        holder.tvEquipo.setText(c.getEquipo());
-        holder.tvTalla.setText("Talla: " + c.getTalla());
-        holder.tvPrecio.setText(c.getPrecio() + " €");
-        holder.imgCamiseta.setImageResource(c.getImagen());
+        Camiseta camiseta = camisetaList.get(position);
+        holder.tvNombre.setText(camiseta.getNombre());
+        holder.tvPrecio.setText(camiseta.getPrecio() + " €");
+
+        Glide.with(context)
+                .load(camiseta.getImagenUrl())
+                .placeholder(R.drawable.placeholder_camiseta)
+                .into(holder.ivCamiseta);
     }
 
     @Override
     public int getItemCount() {
-        return lista.size();
+        return camisetaList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvEquipo, tvTalla, tvPrecio;
-        ImageView imgCamiseta;
+        ImageView ivCamiseta;
+        TextView tvNombre, tvPrecio;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvEquipo = itemView.findViewById(R.id.tvEquipo);
-            tvTalla = itemView.findViewById(R.id.tvTalla);
+            ivCamiseta = itemView.findViewById(R.id.ivCamiseta);
+            tvNombre = itemView.findViewById(R.id.tvNombre);
             tvPrecio = itemView.findViewById(R.id.tvPrecio);
-            imgCamiseta = itemView.findViewById(R.id.imgCamiseta);
         }
     }
 }

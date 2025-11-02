@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+
 }
 
 android {
@@ -44,7 +45,11 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     implementation("com.google.firebase:firebase-analytics")
-
-
+    implementation(libs.firebase.auth.v2231)
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
+    implementation("com.github.bumptech.glide:glide:5.0.5")
+    annotationProcessor("com.github.bumptech.glide:compiler:5.0.5")
+    implementation(libs.firebase.firestore)
+    implementation("com.google.firebase:firebase-auth:23.1.0")
 
 }
