@@ -2,6 +2,8 @@
 agp = "8.13.0"
 firebaseAuthVersion = "22.3.1"
 firebaseFirestore = "26.0.2"
+googleFirebaseAuth = "23.1.0"
+googleMaterial = "1.12.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -10,9 +12,11 @@ material = "1.13.0"
 activity = "1.11.0"
 constraintlayout = "2.2.1"
 firebaseAuth = "24.0.1"
+materialVersion = "1.9.0"
 
 [libraries]
 firebase-auth-v2231 = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuthVersion" }
+firebase-auth-v2310 = { module = "com.google.firebase:firebase-auth", version.ref = "googleFirebaseAuth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -22,6 +26,8 @@ material = { group = "com.google.android.material", name = "material", version.r
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+material-v1120 = { module = "com.google.android.material:material", version.ref = "googleMaterial" }
+material-v190 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

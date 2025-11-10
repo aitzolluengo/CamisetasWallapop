@@ -50,6 +50,11 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:5.0.5")
     annotationProcessor("com.github.bumptech.glide:compiler:5.0.5")
     implementation(libs.firebase.firestore)
-    implementation("com.google.firebase:firebase-auth:23.1.0")
+    implementation(libs.firebase.auth.v2310)
+    implementation("com.google.firebase:firebase-storage:22.0.1")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("org.json:json:20211205")
+    implementation(libs.material.v1120)
+
 
 }

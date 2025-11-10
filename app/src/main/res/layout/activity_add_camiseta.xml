@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
+    android:fillViewport="true"
     tools:context=".activities.AddCamisetaActivity">
 
     <LinearLayout
@@ -17,15 +18,60 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Añadir nueva camiseta"
-            android:textSize="22sp"
+            android:text="Añadir Camiseta de Fútbol"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="@color/primary_color"
+            android:gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Completa todos los datos de tu camiseta"
+            android:textSize="14sp"
+            android:textColor="@color/gray"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
+        <!-- Selector de imagen -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/ivPreview"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:background="@drawable/bg_image_placeholder"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnSelectImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📸 Seleccionar Foto"
+                android:textColor="@color/white"
+                android:background="@drawable/bg_button_rounded"
+                android:drawablePadding="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="* Imagen obligatoria"
+                android:textSize="12sp"
+                android:textColor="@color/red"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
         <!-- Nombre -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Nombre de la camiseta"
@@ -36,32 +82,52 @@
                 android:id="@+id/etNombre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textCapWords" />
+                android:inputType="textCapWords"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Descripción -->
+        <!-- Equipo -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilEquipo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Descripción"
-            app:startIconDrawable="@drawable/ic_info"
+            android:hint="Equipo (ej: Real Madrid, FC Barcelona)"
             android:layout_marginBottom="12dp">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etDescripcion"
+                android:id="@+id/etEquipo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:lines="3" />
+                android:inputType="textCapWords"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Talla -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilTalla"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Talla (ej: S, M, L, XL)"
+            android:layout_marginBottom="12dp">
+
+            <!-- CORREGIDO: TextInputEditText en lugar de textinput.TextInputEditText -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etTalla"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Precio -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPrecio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Precio (€)"
             app:startIconDrawable="@drawable/ic_price_tag"
-            android:layout_marginBottom="24dp">
+            app:endIconMode="clear_text"
+            android:layout_marginBottom="12dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPrecio"
@@ -70,16 +136,47 @@
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Descripción -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Descripción (estado, temporada, características...)"
+            app:startIconDrawable="@drawable/ic_info"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:lines="4"
+                android:minLines="3"
+                android:maxLines="6" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Botón guardar -->
         <Button
             android:id="@+id/btnGuardar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Guardar"
+            android:text="➕ Añadir Camiseta"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:textColor="@android:color/white"
             android:background="@drawable/bg_button_rounded"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp"
+            android:padding="16dp"/>
 
+        <!-- Información adicional -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💡 Tu camiseta será revisada y aparecerá en el listado principal"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:gravity="center"
+            android:layout_marginTop="16dp" />
 
     </LinearLayout>
 </ScrollView>
