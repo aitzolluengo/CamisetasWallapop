@@ -1,0 +1,44 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Ticket con laterales curvados -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="2"
+        android:pathData="
+        M3,6
+        L5,6
+        A2,2 0 0 0 5,10
+        L3,10
+        L3,14
+        L5,14
+        A2,2 0 0 0 5,18
+        L3,18
+        L3,20
+        L21,20
+        L21,18
+        L19,18
+        A2,2 0 0 0 19,14
+        L21,14
+        L21,10
+        L19,10
+        A2,2 0 0 0 19,6
+        L21,6
+        L21,4
+        L3,4
+        Z" />
+
+    <!-- Línea punteada del centro (simulación con varios segmentos) -->
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,5 L12,6.5"/>
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,7.5 L12,9"/>
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,10 L12,11.5"/>
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,12.5 L12,14"/>
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,15 L12,16.5"/>
+    <path android:strokeColor="#2E7D32" android:strokeWidth="2" android:pathData="M12,17.5 L12,19"/>
+</vector>
+
+
