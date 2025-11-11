@@ -8,6 +8,10 @@
         android:icon="@drawable/ic_search"
         android:title="Buscar" />
     <item
+        android:id="@+id/nav_sell"
+        android:icon="@drawable/ic_add"
+        android:title="Vender" />
+    <item
         android:id="@+id/nav_chat"
         android:icon="@drawable/ic_chat"
         android:title="Chat" />

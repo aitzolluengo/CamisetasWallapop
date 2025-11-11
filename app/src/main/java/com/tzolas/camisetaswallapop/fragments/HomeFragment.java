@@ -22,7 +22,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
     private ProductsAdapter adapter;
     private HomeViewModel viewModel;
-    private FloatingActionButton btnAdd;
+    //private FloatingActionButton btnAdd;
 
     public HomeFragment() {}
 
@@ -35,7 +35,7 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         recyclerView = view.findViewById(R.id.recyclerProducts);
-        btnAdd = view.findViewById(R.id.btnAdd);
+        //btnAdd = view.findViewById(R.id.btnAdd);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new ProductsAdapter(new java.util.ArrayList<>());
@@ -49,14 +49,14 @@ public class HomeFragment extends Fragment {
         });
 
         // Abrir SellFragment
-        btnAdd.setOnClickListener(v -> {
-            requireActivity()
-                    .getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, new SellFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+        //btnAdd.setOnClickListener(v -> {
+            //requireActivity()
+            //        .getSupportFragmentManager()
+              //      .beginTransaction()
+                //    .replace(R.id.fragment_container, new SellFragment())
+                  //  .addToBackStack(null)
+                    //.commit();
+        //});
 
         return view;
     }

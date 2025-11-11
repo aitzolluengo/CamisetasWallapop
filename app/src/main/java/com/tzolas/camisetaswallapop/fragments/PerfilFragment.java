@@ -1,5 +1,6 @@
 package com.tzolas.camisetaswallapop.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,23 +15,36 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.LoginActivity;
+import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
+import com.tzolas.camisetaswallapop.models.Product;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PerfilFragment extends Fragment {
 
-    private TextView tvName, tvEmail;
+    private TextView tvName, tvEmail, tvEmpty;
     private ImageView ivProfilePhoto;
     private Button btnLogout;
-
     private FirebaseAuth auth;
+
+    private RecyclerView recyclerView;
+    private ProductsAdapter adapter;
+    private List<Product> listaProductos = new ArrayList<>();
 
     public PerfilFragment() {}
 
+    @SuppressLint("MissingInflatedId")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -39,26 +53,32 @@ public class PerfilFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
+        // UI
         tvName = view.findViewById(R.id.tvName);
         tvEmail = view.findViewById(R.id.tvEmail);
         ivProfilePhoto = view.findViewById(R.id.ivProfilePhoto);
         btnLogout = view.findViewById(R.id.btnLogout);
+        tvEmpty = view.findViewById(R.id.tvEmpty);
+        recyclerView = view.findViewById(R.id.recyclerView);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new ProductsAdapter(listaProductos);
+        recyclerView.setAdapter(adapter);
 
         auth = FirebaseAuth.getInstance();
-
         FirebaseUser user = auth.getCurrentUser();
 
         if (user != null) {
             mostrarDatosUsuario(user);
+            cargarMisProductos(user.getUid());
         } else {
             Toast.makeText(getContext(), "Error: no hay sesión activa", Toast.LENGTH_SHORT).show();
         }
 
         btnLogout.setOnClickListener(v -> {
             auth.signOut();
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            startActivity(new Intent(getActivity(), LoginActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
             requireActivity().finish();
         });
 
@@ -66,15 +86,10 @@ public class PerfilFragment extends Fragment {
     }
 
     private void mostrarDatosUsuario(FirebaseUser user) {
-
-        // Nombre
         String name = user.getDisplayName();
         tvName.setText((name != null && !name.isEmpty()) ? name : "Usuario sin nombre");
-
-        // Email
         tvEmail.setText(user.getEmail());
 
-        // Foto perfil
         Uri photoUrl = user.getPhotoUrl();
         if (photoUrl != null) {
             Glide.with(this)
@@ -85,5 +100,34 @@ public class PerfilFragment extends Fragment {
         } else {
             ivProfilePhoto.setImageResource(R.drawable.ic_user_placeholder);
         }
+    }
+
+    private void cargarMisProductos(String uid) {
+        FirebaseFirestore.getInstance()
+                .collection("products")
+                .whereEqualTo("userId", uid)
+                .get()
+                .addOnSuccessListener(query -> {
+                    listaProductos.clear();
+                    for (DocumentSnapshot doc : query.getDocuments()) {
+                        Product p = doc.toObject(Product.class);
+                        if (p != null) listaProductos.add(p);
+                    }
+
+                    adapter.notifyDataSetChanged();
+
+                    // Mostrar/ocultar mensaje vacío
+                    if (listaProductos.isEmpty()) {
+                        tvEmpty.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    } else {
+                        tvEmpty.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
+                    }
+
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Error cargando productos", Toast.LENGTH_SHORT).show()
+                );
     }
 }

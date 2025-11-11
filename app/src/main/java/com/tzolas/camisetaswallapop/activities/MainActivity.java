@@ -13,6 +13,7 @@ import com.tzolas.camisetaswallapop.fragments.BuscarFragment;
 import com.tzolas.camisetaswallapop.fragments.ChatFragment;
 import com.tzolas.camisetaswallapop.fragments.HomeFragment;
 import com.tzolas.camisetaswallapop.fragments.PerfilFragment;
+import com.tzolas.camisetaswallapop.fragments.SellFragment; // ✅ IMPORTADO
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,27 +31,36 @@ public class MainActivity extends AppCompatActivity {
 
         // Listener del bottom nav
         bottomNav.setOnItemSelectedListener(item -> {
-            Fragment selected = null;
-            int id = item.getItemId();
-
-            if (id == R.id.nav_inicio) selected = new HomeFragment();
-            else if (id == R.id.nav_buscar) selected = new BuscarFragment();
-            else if (id == R.id.nav_chat) selected = new ChatFragment();
-            else if (id == R.id.nav_perfil) selected = new PerfilFragment();
-
-            if (selected != null)
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, selected)
+            if (item.getItemId() == R.id.nav_sell) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new SellFragment())
                         .commit();
+                return true;
+            }
+
+            if (item.getItemId() == R.id.nav_inicio) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+            }
+            else if (item.getItemId() == R.id.nav_buscar) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new BuscarFragment()).commit();
+            }
+            else if (item.getItemId() == R.id.nav_chat) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ChatFragment()).commit();
+            }
+            else if (item.getItemId() == R.id.nav_perfil) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new PerfilFragment()).commit();
+            }
 
             return true;
         });
+
+
     }
 
     // Este método centraliza la lógica de navegación según el Intent (goTo)
     private void handleGoTo(Intent intent) {
         if (intent == null) {
-            // por seguridad, carga home si no hay intent
             loadFragment(new HomeFragment());
             bottomNav.setSelectedItemId(R.id.nav_inicio);
             return;
@@ -58,21 +68,27 @@ public class MainActivity extends AppCompatActivity {
 
         String goTo = intent.getStringExtra("goTo");
         Log.d("MainActivity", "handleGoTo -> " + goTo);
+
         if ("perfil".equals(goTo)) {
             loadFragment(new PerfilFragment());
             bottomNav.setSelectedItemId(R.id.nav_perfil);
-        } else {
+        }
+        // (Opcional si deseas abrir a vender desde intent en algún momento)
+        else if ("vender".equals(goTo)) {
+            loadFragment(new SellFragment());
+            bottomNav.setSelectedItemId(R.id.nav_sell);
+        }
+        else {
             loadFragment(new HomeFragment());
             bottomNav.setSelectedItemId(R.id.nav_inicio);
         }
     }
 
-    // Crucial: cuando la Activity ya existe y se le trae al frente, Android llamará a onNewIntent()
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent); // actualiza el intent interno
-        handleGoTo(intent); // vuelve a manejar la navegación
+        setIntent(intent);
+        handleGoTo(intent);
     }
 
     private void loadFragment(Fragment fragment) {
