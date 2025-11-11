@@ -10,7 +10,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
 import com.tzolas.camisetaswallapop.R;
+import com.tzolas.camisetaswallapop.models.User;
+import com.tzolas.camisetaswallapop.repositories.UserRepository;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -64,10 +67,36 @@ public class RegisterActivity extends AppCompatActivity {
         // Registro en Firebase
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
+
                     if (task.isSuccessful()) {
-                        Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, MainActivity.class));
-                        finish();
+
+                        FirebaseUser fu = auth.getCurrentUser();
+                        if (fu != null) {
+
+                            String uid = fu.getUid();
+
+                            // Nombre generado del email
+                            String name = email.contains("@")
+                                    ? email.substring(0, email.indexOf("@"))
+                                    : "Usuario";
+
+                            // Foto nula por ahora
+                            String photoUrl = null;
+
+                            User u = new User(uid, name, email, photoUrl, null);
+
+                            // Guardar/Actualizar en Firestore
+                            new UserRepository().upsertUser(u)
+                                    .addOnSuccessListener(unused -> {
+                                        Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show();
+                                        startActivity(new Intent(this, MainActivity.class));
+                                        finish();
+                                    })
+                                    .addOnFailureListener(e ->
+                                            Toast.makeText(this, "Error guardando usuario", Toast.LENGTH_SHORT).show()
+                                    );
+                        }
+
                     } else {
                         if (task.getException() instanceof FirebaseAuthUserCollisionException) {
                             Toast.makeText(this, "El correo ya está registrado", Toast.LENGTH_SHORT).show();
