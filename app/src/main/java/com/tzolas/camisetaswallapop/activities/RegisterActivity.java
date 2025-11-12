@@ -83,7 +83,7 @@ public class RegisterActivity extends AppCompatActivity {
                             // Foto nula por ahora
                             String photoUrl = null;
 
-                            User u = new User(uid, name, email, photoUrl, null);
+                            User u = new User(uid, name, email, photoUrl, null, 0 , 0);
 
                             // Guardar/Actualizar en Firestore
                             new UserRepository().upsertUser(u)

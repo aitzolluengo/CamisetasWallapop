@@ -170,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
         String photoUrl = (fu.getPhotoUrl() != null) ? fu.getPhotoUrl().toString() : null;
 
         // crear User
-        User u = new User(uid, displayName, email, photoUrl, null);
+        User u = new User(uid, displayName, email, photoUrl, null, 0, 0);
 
         // guardar en Firestore
         new UserRepository().upsertUser(u);

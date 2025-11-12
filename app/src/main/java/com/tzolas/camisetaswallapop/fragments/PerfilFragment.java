@@ -4,11 +4,13 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.LoginActivity;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
@@ -30,17 +33,22 @@ import com.tzolas.camisetaswallapop.models.Product;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class PerfilFragment extends Fragment {
 
-    private TextView tvName, tvEmail, tvEmpty;
+    private TextView tvName, tvEmail, tvEmpty, txtRatingCount;
     private ImageView ivProfilePhoto;
     private Button btnLogout;
+    private RatingBar ratingBar;
+
     private FirebaseAuth auth;
+    private String myUid;
+    private ListenerRegistration ratingListener;
 
     private RecyclerView recyclerView;
     private ProductsAdapter adapter;
-    private List<Product> listaProductos = new ArrayList<>();
+    private final List<Product> listaProductos = new ArrayList<>();
 
     public PerfilFragment() {}
 
@@ -61,12 +69,17 @@ public class PerfilFragment extends Fragment {
         tvEmpty = view.findViewById(R.id.tvEmpty);
         recyclerView = view.findViewById(R.id.recyclerView);
 
+        // ⭐️ rating UI
+        ratingBar = view.findViewById(R.id.ratingBarProfile);
+        txtRatingCount = view.findViewById(R.id.txtRatingCount);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ProductsAdapter(listaProductos);
+        adapter = new ProductsAdapter(listaProductos); // tu adapter admite este ctor
         recyclerView.setAdapter(adapter);
 
         auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
+        myUid = (user != null) ? user.getUid() : null;
 
         if (user != null) {
             mostrarDatosUsuario(user);
@@ -83,6 +96,52 @@ public class PerfilFragment extends Fragment {
         });
 
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // 🔴 Listener en tiempo real para rating
+        if (myUid == null) return;
+        ratingListener = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(myUid)
+                .addSnapshotListener((doc, e) -> {
+                    if (e != null) {
+                        Log.e("PerfilFragment", "rating listener error", e);
+                        return;
+                    }
+                    updateRatingHeader(doc);
+                });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (ratingListener != null) {
+            ratingListener.remove();
+            ratingListener = null;
+        }
+    }
+
+    private void updateRatingHeader(DocumentSnapshot doc) {
+        if (doc == null || !doc.exists()) return;
+
+        Double sum = doc.getDouble("ratingSum");
+        Long count = doc.getLong("ratingCount");
+
+        double ratingSum = (sum != null) ? sum : 0.0;
+        long ratingCount = (count != null) ? count : 0;
+        double avg = (ratingCount > 0) ? (ratingSum / ratingCount) : 0.0;
+
+        if (ratingBar != null) ratingBar.setRating((float) avg);
+        if (txtRatingCount != null) {
+            txtRatingCount.setText(
+                    ratingCount == 0
+                            ? "(Sin valoraciones)"
+                            : String.format(Locale.getDefault(), "(%.1f★ · %d valoraciones)", avg, ratingCount)
+            );
+        }
     }
 
     private void mostrarDatosUsuario(FirebaseUser user) {

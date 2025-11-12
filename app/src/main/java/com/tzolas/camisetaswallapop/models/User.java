@@ -6,15 +6,19 @@ public class User {
     private String email;
     private String photo;    // url foto
     private Long createdAt;  // opcional para lecturas simples
+    private double ratingSum;
+    private long ratingCount;
 
     public User() {}
 
-    public User(String uid, String name, String email, String photo, Long createdAt) {
+    public User(String uid, String name, String email, String photo, Long createdAt, double pRatingSum, long pRatingCount) {
         this.uid = uid;
         this.name = name;
         this.email = email;
         this.photo = photo;
         this.createdAt = createdAt;
+        this.ratingCount=pRatingCount;
+        this.ratingSum=pRatingCount;
     }
 
     public String getUid() { return uid; }
@@ -27,4 +31,13 @@ public class User {
     public void setPhoto(String photo) { this.photo = photo; }
     public Long getCreatedAt() { return createdAt; }
     public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
+    public double getRatingSum() { return ratingSum; }
+    public void setRatingSum(double ratingSum) { this.ratingSum = ratingSum; }
+
+    public long getRatingCount() { return ratingCount; }
+    public void setRatingCount(long ratingCount) { this.ratingCount = ratingCount; }
+
+    public double getAvgRating() {
+        return ratingCount > 0 ? ratingSum / ratingCount : 0.0;
+    }
 }
