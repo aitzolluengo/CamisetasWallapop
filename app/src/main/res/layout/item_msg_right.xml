@@ -1,17 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="end"
-    android:padding="8dp">
+    android:orientation="vertical"
+    android:padding="6dp">
 
     <TextView
         android:id="@+id/txtMessageRight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:maxWidth="250dp"
-        android:background="@drawable/bg_msg_right"
-        android:textColor="@android:color/white"
+        android:background="@drawable/bg_bubble_right"
+        android:padding="10dp"
+        android:textColor="#FFFFFF"
         android:textSize="15sp"
-        android:padding="12dp" />
+        android:maxWidth="300dp" />
+
+    <TextView
+        android:id="@+id/txtTimeRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:textColor="#DDDDDD"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="end" />
 </LinearLayout>

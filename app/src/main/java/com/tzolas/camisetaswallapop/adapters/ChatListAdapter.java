@@ -12,23 +12,20 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.ChatActivity;
-import com.tzolas.camisetaswallapop.models.Chat;
+import com.tzolas.camisetaswallapop.models.ChatPreview;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHolder> {
 
+    private List<ChatPreview> chats;
     private Context context;
-    private List<Chat> chats;
 
-    public ChatListAdapter(List<Chat> chats) {
+    public ChatListAdapter(List<ChatPreview> chats) {
         this.chats = chats;
     }
 
@@ -36,45 +33,30 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         context = parent.getContext();
-        View v = LayoutInflater.from(context).inflate(R.layout.item_chat, parent, false);
-        return new ViewHolder(v);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_chat_preview, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder h, int pos) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        ChatPreview chat = chats.get(position);
 
-        Chat c = chats.get(pos);
+        holder.txtName.setText(chat.getOtherUserName());
+        holder.txtLastMessage.setText(chat.getLastMessage() != null ? chat.getLastMessage() : "Nuevo chat");
 
-        String myId = FirebaseAuth.getInstance().getUid();
-        String otherId = c.getUser1().equals(myId) ? c.getUser2() : c.getUser1();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        holder.txtTime.setText(chat.getLastMessageTime() != 0 ? sdf.format(new Date(chat.getLastMessageTime())) : "");
 
-        loadUserInfo(otherId, h);
+        Glide.with(context)
+                .load(chat.getOtherUserPhoto())
+                .placeholder(R.drawable.ic_user_placeholder)
+                .circleCrop()
+                .into(holder.imgUser);
 
-        // Cargar último mensaje
-        FirebaseFirestore.getInstance()
-                .collection("chats")
-                .document(c.getId())
-                .collection("messages")
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(q -> {
-                    if (!q.isEmpty()) {
-                        var msg = q.getDocuments().get(0);
-                        h.txtLastMessage.setText(msg.getString("text"));
-
-                        long ts = msg.getLong("timestamp");
-                        String time = new SimpleDateFormat("HH:mm", Locale.getDefault())
-                                .format(new Date(ts));
-                        h.txtTime.setText(time);
-                    }
-                });
-
-        h.itemView.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(v -> {
             Intent i = new Intent(context, ChatActivity.class);
-            i.putExtra("chatId", c.getId());
-            i.putExtra("sellerId", otherId);    // lo tratamos como la otra persona
-            i.putExtra("productId", c.getProductId());
+            i.putExtra("chatId", chat.getChatId());
+            i.putExtra("sellerId", chat.getOtherUserId());
             context.startActivity(i);
         });
     }
@@ -85,48 +67,15 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-
         ImageView imgUser;
-        TextView txtUserName, txtLastMessage, txtTime;
+        TextView txtName, txtLastMessage, txtTime;
 
-        public ViewHolder(@NonNull View item) {
-            super(item);
-            imgUser       = item.findViewById(R.id.imgUser);
-            txtUserName   = item.findViewById(R.id.txtUserName);
-            txtLastMessage = item.findViewById(R.id.txtLastMessage);
-            txtTime       = item.findViewById(R.id.txtTime);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            imgUser = itemView.findViewById(R.id.imgUser);
+            txtName = itemView.findViewById(R.id.txtName);
+            txtLastMessage = itemView.findViewById(R.id.txtLastMessage);
+            txtTime = itemView.findViewById(R.id.txtTime);
         }
-    }
-
-    /** ---------------------------------------------------------
-     * ✅ Load other user info
-     * --------------------------------------------------------- */
-    private void loadUserInfo(String otherId, ViewHolder h) {
-
-        FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(otherId)
-                .get()
-                .addOnSuccessListener(doc -> {
-
-                    String name = doc.getString("name");
-                    String photo = doc.getString("photo");
-
-                    h.txtUserName.setText(
-                            (name != null && !name.isEmpty())
-                                    ? name
-                                    : "Usuario"
-                    );
-
-                    if (photo != null && !photo.isEmpty()) {
-                        Glide.with(context)
-                                .load(photo)
-                                .placeholder(R.drawable.ic_user_placeholder)
-                                .circleCrop()
-                                .into(h.imgUser);
-                    } else {
-                        h.imgUser.setImageResource(R.drawable.ic_user_placeholder);
-                    }
-                });
     }
 }

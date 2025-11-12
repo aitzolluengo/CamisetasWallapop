@@ -59,8 +59,37 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         if (holder instanceof SentHolder) {
             ((SentHolder) holder).txtMessage.setText(m.getText());
+            ((SentHolder) holder).txtTime.setText(formatTime(m.getTimestamp()));
         } else {
             ((ReceivedHolder) holder).txtMessage.setText(m.getText());
+            ((ReceivedHolder) holder).txtTime.setText(formatTime(m.getTimestamp()));
+        }
+
+        // 🔥 animación de aparición
+        holder.itemView.setAlpha(0f);
+        holder.itemView.animate().alpha(1f).setDuration(150).start();
+    }
+
+    private String formatTime(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        return sdf.format(new Date(timestamp));
+    }
+
+    static class SentHolder extends RecyclerView.ViewHolder {
+        TextView txtMessage, txtTime;
+        public SentHolder(@NonNull View item) {
+            super(item);
+            txtMessage = item.findViewById(R.id.txtMessageRight);
+            txtTime = item.findViewById(R.id.txtTimeRight);
+        }
+    }
+
+    static class ReceivedHolder extends RecyclerView.ViewHolder {
+        TextView txtMessage, txtTime;
+        public ReceivedHolder(@NonNull View item) {
+            super(item);
+            txtMessage = item.findViewById(R.id.txtMessageLeft);
+            txtTime = item.findViewById(R.id.txtTimeLeft);
         }
     }
 
@@ -69,19 +98,4 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return messages.size();
     }
 
-    static class SentHolder extends RecyclerView.ViewHolder {
-        TextView txtMessage;
-        public SentHolder(@NonNull View item) {
-            super(item);
-            txtMessage = item.findViewById(R.id.txtMessageRight);
-        }
-    }
-
-    static class ReceivedHolder extends RecyclerView.ViewHolder {
-        TextView txtMessage;
-        public ReceivedHolder(@NonNull View item) {
-            super(item);
-            txtMessage = item.findViewById(R.id.txtMessageLeft);
-        }
-    }
 }

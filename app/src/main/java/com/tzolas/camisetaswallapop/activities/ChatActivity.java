@@ -61,9 +61,14 @@ public class ChatActivity extends AppCompatActivity {
      * ========================================================= */
     private void setupRecycler() {
         adapter = new MessageAdapter(messageList, currentUserId);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        LinearLayoutManager lm = new LinearLayoutManager(this);
+        lm.setStackFromEnd(true); // ✅ los mensajes nuevos se alinean abajo
+
+        recyclerView.setLayoutManager(lm);
         recyclerView.setAdapter(adapter);
     }
+
 
     /** =========================================================
      * ✅ LEER MENSAJES EN TIEMPO REAL
@@ -81,7 +86,12 @@ public class ChatActivity extends AppCompatActivity {
                     messageList.clear();
                     messageList.addAll(value.toObjects(Message.class));
                     adapter.notifyDataSetChanged();
-                    recyclerView.scrollToPosition(messageList.size() - 1); // auto-scroll
+
+                    if (!messageList.isEmpty()) {
+                        recyclerView.smoothScrollToPosition(messageList.size() - 1);
+                    }
+
+
                 });
     }
 
