@@ -19,6 +19,7 @@ import com.tzolas.camisetaswallapop.repositories.ChatRepository;
 import com.tzolas.camisetaswallapop.repositories.UserRepository;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private Button btnChat;
     private LinearLayout containerExtra;
 
-    private Product currentProduct;   // ✅ guardamos referencia
+    private Product currentProduct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,13 +54,11 @@ public class ProductDetailActivity extends AppCompatActivity {
      * ✅ Cargar datos del producto
      * ========================================================= */
     private void loadProduct(String productId) {
-
         FirebaseFirestore.getInstance()
                 .collection("products")
                 .document(productId)
                 .get()
                 .addOnSuccessListener(doc -> {
-
                     Product p = doc.toObject(Product.class);
                     if (p == null) return;
 
@@ -74,16 +73,11 @@ public class ProductDetailActivity extends AppCompatActivity {
                             .placeholder(R.drawable.bg_image_placeholder)
                             .into(img);
 
-                    // extras dinámicos
                     Map<String, Object> extra = p.getExtra();
-                    if (extra != null && !extra.isEmpty()) {
-                        fillExtraData(extra);
-                    }
+                    if (extra != null && !extra.isEmpty()) fillExtraData(extra);
 
-                    // info usuario
                     loadSellerInfo(p.getUserId());
 
-                    // ✅ CHAT
                     btnChat.setOnClickListener(v -> startChat(p));
                 });
     }
@@ -95,51 +89,40 @@ public class ProductDetailActivity extends AppCompatActivity {
         containerExtra.removeAllViews();
 
         for (String key : extra.keySet()) {
-
             Object value = extra.get(key);
 
-            // ✅ Formato fecha si corresponde
             if (value instanceof Long && key.toLowerCase().contains("fecha")) {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                 value = sdf.format(new Date((Long) value));
             }
 
             String prettyKey = key.substring(0, 1).toUpperCase() + key.substring(1);
-
             TextView tv = new TextView(this);
             tv.setText("• " + prettyKey + ": " + value);
             tv.setTextSize(15);
             tv.setTextColor(0xFF444444);
-
             containerExtra.addView(tv);
         }
     }
-
 
     /** =========================================================
      * ✅ Cargar info del vendedor
      * ========================================================= */
     private void loadSellerInfo(String sellerId) {
-
         if (sellerId == null || sellerId.trim().isEmpty()) return;
 
         new UserRepository().getUserById(sellerId)
                 .addOnSuccessListener(doc -> {
-
                     if (doc == null || !doc.exists()) {
                         txtSellerName.setText("Vendedor");
                         imgSeller.setImageResource(R.drawable.ic_user_placeholder);
                         return;
                     }
 
-                    String name     = doc.getString("name");
+                    String name = doc.getString("name");
                     String photoUrl = doc.getString("photo");
 
-                    txtSellerName.setText(
-                            (name != null && !name.trim().isEmpty())
-                                    ? name
-                                    : "Vendedor"
-                    );
+                    txtSellerName.setText((name != null && !name.trim().isEmpty()) ? name : "Vendedor");
 
                     if (photoUrl != null && !photoUrl.trim().isEmpty()) {
                         Glide.with(this)
@@ -151,13 +134,11 @@ public class ProductDetailActivity extends AppCompatActivity {
                         imgSeller.setImageResource(R.drawable.ic_user_placeholder);
                     }
 
-                    // ✅ Pulsar el bloque → abrir perfil
                     findViewById(R.id.sellerBlock).setOnClickListener(v -> {
                         Intent i = new Intent(ProductDetailActivity.this, SellerProfileActivity.class);
                         i.putExtra("sellerId", sellerId);
                         startActivity(i);
                     });
-
                 })
                 .addOnFailureListener(e -> {
                     txtSellerName.setText("Vendedor");
@@ -165,31 +146,28 @@ public class ProductDetailActivity extends AppCompatActivity {
                 });
     }
 
-
     /** =========================================================
-     * ✅ CREAR / ABRIR CHAT
+     * ✅ CREAR / ABRIR CHAT con participants
      * ========================================================= */
     private void startChat(Product p) {
-
-        String buyerId  = FirebaseAuth.getInstance().getUid();
+        String buyerId = FirebaseAuth.getInstance().getUid();
         String sellerId = p.getUserId();
         String productId = p.getId();
 
-        if (buyerId == null) return; // no logeado
+        if (buyerId == null) return;
 
         ChatRepository repo = new ChatRepository();
 
         repo.findChat(buyerId, sellerId, productId)
                 .addOnSuccessListener(query -> {
-
                     if (!query.isEmpty()) {
-                        // ✅ ya existe chat
+                        // ✅ Ya existe chat → abrir
                         String chatId = query.getDocuments().get(0).getId();
                         openChat(chatId, sellerId, productId);
                         return;
                     }
 
-                    // ✅ crear chat
+                    // ✅ Crear nuevo chat
                     String chatId = repo.generateId();
 
                     Chat chat = new Chat(
@@ -200,11 +178,21 @@ public class ProductDetailActivity extends AppCompatActivity {
                             System.currentTimeMillis()
                     );
 
-                    repo.createChat(chat)
+                    // 👉 Añadimos lista de participantes
+                    FirebaseFirestore.getInstance()
+                            .collection("chats")
+                            .document(chatId)
+                            .set(new java.util.HashMap<String, Object>() {{
+                                put("id", chatId);
+                                put("user1", buyerId);
+                                put("user2", sellerId);
+                                put("productId", productId);
+                                put("createdAt", System.currentTimeMillis());
+                                put("participants", Arrays.asList(buyerId, sellerId));
+                            }})
                             .addOnSuccessListener(v -> openChat(chatId, sellerId, productId));
                 });
     }
-
 
     /** =========================================================
      * ✅ Ir a ChatActivity
@@ -216,5 +204,4 @@ public class ProductDetailActivity extends AppCompatActivity {
         i.putExtra("productId", productId);
         startActivity(i);
     }
-
 }
