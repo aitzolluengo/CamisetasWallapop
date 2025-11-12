@@ -1,12 +1,14 @@
 package com.tzolas.camisetaswallapop.models;
 
+import androidx.annotation.Keep;
 import java.util.Map;
 
+@Keep // evita que R8/ProGuard lo elimine
 public class Product {
 
     private String id;
     private String title;
-    private String category;   // cromo | camiseta | entrada
+    private String category;
     private double price;
     private String description;
     private String imageUrl;
@@ -14,12 +16,19 @@ public class Product {
     private long timestamp;
     private Map<String, Object> extra;
 
-    public Product() {
-        // Firestore necesita constructor vacío
-    }
+    // Campos de venta (si los añadiste)
+    private boolean sold;
+    private String buyerId;
+    private String orderId;
+    private long soldAt;
 
+    // 🔴 IMPORTANTE: constructor vacío PÚBLICO
+    public Product() { }
+
+    // Constructor “corto” (inicializa defaults de venta)
     public Product(String id, String title, String category, double price,
-                   String description, String imageUrl, String userId, long timestamp, Map<String, Object> extra) {
+                   String description, String imageUrl, String userId, long timestamp,
+                   Map<String, Object> extra) {
         this.id = id;
         this.title = title;
         this.category = category;
@@ -29,79 +38,63 @@ public class Product {
         this.userId = userId;
         this.timestamp = timestamp;
         this.extra = extra;
+
+        // defaults para venta
+        this.sold = false;
+        this.buyerId = null;
+        this.orderId = null;
+        this.soldAt = 0L;
     }
 
-    // GETTERS & SETTERS
-
-    public String getId() {
-        return id;
+    // (opcional) Constructor extendido con campos de venta
+    public Product(String id, String title, String category, double price,
+                   String description, String imageUrl, String userId, long timestamp,
+                   Map<String, Object> extra,
+                   boolean sold, String buyerId, String orderId, long soldAt) {
+        this(id, title, category, price, description, imageUrl, userId, timestamp, extra);
+        this.sold = sold;
+        this.buyerId = buyerId;
+        this.orderId = orderId;
+        this.soldAt = soldAt;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    // Getters y setters PÚBLICOS para TODOS los campos (Firestore los necesita)
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    public String getCategory() {
-        return category;
-    }
+    public double getPrice() { return price; }
+    public void setPrice(double price) { this.price = price; }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public double getPrice() {
-        return price;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public String getDescription() {
-        return description;
-    }
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Map<String, Object> getExtra() { return extra; }
+    public void setExtra(Map<String, Object> extra) { this.extra = extra; }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
+    public boolean isSold() { return sold; }
+    public void setSold(boolean sold) { this.sold = sold; }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+    public String getBuyerId() { return buyerId; }
+    public void setBuyerId(String buyerId) { this.buyerId = buyerId; }
 
-    public String getUserId() {
-        return userId;
-    }
+    public String getOrderId() { return orderId; }
+    public void setOrderId(String orderId) { this.orderId = orderId; }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public Map<String, Object> getExtra() {
-        return extra;
-    }
-
-    public void setExtra(Map<String, Object> extra) {
-        this.extra = extra;
-    }
+    public long getSoldAt() { return soldAt; }
+    public void setSoldAt(long soldAt) { this.soldAt = soldAt; }
 }

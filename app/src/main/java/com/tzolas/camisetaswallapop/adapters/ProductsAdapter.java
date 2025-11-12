@@ -23,36 +23,28 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     private final Context context;
     private OnItemClickListener listener;
 
-    // ✅ Interfaz para click de producto
     public interface OnItemClickListener {
         void onItemClick(Product product);
     }
 
-    // ✅ Constructor principal (con listener)
     public ProductsAdapter(Context context, List<Product> products, OnItemClickListener listener) {
         this.context = context;
         this.products = products != null ? products : new ArrayList<>();
         this.listener = listener;
     }
 
-    // ✅ Constructor secundario (sin listener)
-    // → Permite crear el adapter como antes: new ProductsAdapter(context, list)
     public ProductsAdapter(Context context, List<Product> products) {
         this(context, products, null);
     }
 
-    // ✅ Constructor mínimo (compatibilidad con código antiguo)
-    // → new ProductsAdapter(new ArrayList<>())
     public ProductsAdapter(List<Product> products) {
         this(null, products, null);
     }
 
-    // ✅ Método para asignar/actualizar el listener dinámicamente
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
 
-    // ✅ Método para actualizar productos
     public void setProducts(List<Product> products) {
         this.products = products != null ? products : new ArrayList<>();
         notifyDataSetChanged();
@@ -78,9 +70,30 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
                 .placeholder(R.drawable.bg_image_placeholder)
                 .into(holder.image);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onItemClick(p);
-        });
+        // --- Lógica de VENDIDO ---
+        if (holder.badgeSold != null) {
+            if (p.isSold()) {
+                holder.badgeSold.setVisibility(View.VISIBLE);
+                holder.itemView.setAlpha(0.6f);
+                holder.itemView.setOnClickListener(null); // desactivar click si está vendido
+            } else {
+                holder.badgeSold.setVisibility(View.GONE);
+                holder.itemView.setAlpha(1f);
+                holder.itemView.setOnClickListener(v -> {
+                    if (listener != null) listener.onItemClick(p);
+                });
+            }
+        } else {
+            // Si no tienes badge en el layout, al menos respeta el click
+            holder.itemView.setAlpha(p.isSold() ? 0.6f : 1f);
+            if (p.isSold()) {
+                holder.itemView.setOnClickListener(null);
+            } else {
+                holder.itemView.setOnClickListener(v -> {
+                    if (listener != null) listener.onItemClick(p);
+                });
+            }
+        }
     }
 
     @Override
@@ -89,7 +102,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView title, price;
+        TextView title, price, badgeSold;
         ImageView image;
 
         public ViewHolder(@NonNull View itemView) {
@@ -97,6 +110,8 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
             title = itemView.findViewById(R.id.txtTitle);
             price = itemView.findViewById(R.id.txtPrice);
             image = itemView.findViewById(R.id.imgProduct);
+            // Este id es opcional; si no existe en tu XML, quedará null y no pasa nada
+            badgeSold = itemView.findViewById(R.id.badgeSold);
         }
     }
 }

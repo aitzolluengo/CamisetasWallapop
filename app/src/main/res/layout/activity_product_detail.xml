@@ -146,6 +146,14 @@
             android:layout_marginTop="32dp"
             android:layout_width="match_parent"
             android:layout_height="48dp"/>
+        <Button
+            android:id="@+id/btnVender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Vender"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </ScrollView>

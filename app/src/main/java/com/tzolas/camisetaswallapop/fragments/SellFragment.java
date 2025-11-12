@@ -212,7 +212,7 @@ public class SellFragment extends Fragment {
 
         Product product = new Product(
                 productId, title, category, price, description, "",
-                user.getUid(), timestamp, extra
+                user.getUid(), timestamp, extra, false, null, null , 0L
         );
 
         new Thread(() -> {
