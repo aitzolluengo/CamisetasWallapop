@@ -33,10 +33,12 @@
         <!-- Añadir camiseta -->
 
         <!-- Detalle de camiseta -->
-       <!--<activity android:name=".activities.CamisetaDetailActivity" /> -->
+        <activity android:name=".activities.ProductDetailActivity"/>
 
         <!-- Perfil del usuario -->
-        <!-- <activity android:name=".activities.ProfileActivity" />-->
+        <activity android:name=".activities.SellerProfileActivity"/>
+
+        <activity android:name=".activities.ChatActivity"/>
 
      </application>
 

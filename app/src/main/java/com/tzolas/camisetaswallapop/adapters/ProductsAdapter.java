@@ -21,6 +21,18 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     private List<Product> products;
     private Context context;
 
+    // ✅ Nuevo: Callback de click
+    public interface OnItemClickListener {
+        void onItemClick(Product product);
+    }
+
+    private OnItemClickListener listener;
+
+    // ✅ Método para registrar listener
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
     public ProductsAdapter(List<Product> products) {
         this.products = products;
     }
@@ -53,6 +65,11 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
                 .load(p.getImageUrl())
                 .placeholder(R.drawable.bg_image_placeholder) // opcional
                 .into(holder.image);
+
+        // ✅ OnClick
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onItemClick(p);
+        });
     }
 
     @Override

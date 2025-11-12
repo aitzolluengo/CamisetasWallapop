@@ -21,6 +21,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.tzolas.camisetaswallapop.R;
+import com.tzolas.camisetaswallapop.models.User;
+import com.tzolas.camisetaswallapop.repositories.UserRepository;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -69,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (auth.getCurrentUser() != null) {
+            upsertUserToFirestore(auth.getCurrentUser());
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
@@ -93,6 +96,9 @@ public class LoginActivity extends AppCompatActivity {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        FirebaseUser user = auth.getCurrentUser();
+                        upsertUserToFirestore(user);
+
                         Toast.makeText(this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
@@ -123,12 +129,15 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         auth.signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
+                .addOnCompleteListener(this, t -> {
+                    if (t.isSuccessful()) {
                         FirebaseUser user = auth.getCurrentUser();
+                        upsertUserToFirestore(user);
+
                         Toast.makeText(this, "Bienvenido " + (user != null ? user.getDisplayName() : ""), Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
@@ -136,5 +145,34 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(this, "Error en la autenticación con Google", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    /**
+     * ✅ Guarda / actualiza el usuario en Firestore
+     */
+    private void upsertUserToFirestore(FirebaseUser fu) {
+        if (fu == null) return;
+
+        String uid = fu.getUid();
+        String email = fu.getEmail();
+
+        // nombre
+        String displayName = fu.getDisplayName();
+        if (displayName == null || displayName.trim().isEmpty()) {
+            if (email != null && email.contains("@")) {
+                displayName = email.substring(0, email.indexOf("@"));
+            } else {
+                displayName = "Usuario";
+            }
+        }
+
+        // foto
+        String photoUrl = (fu.getPhotoUrl() != null) ? fu.getPhotoUrl().toString() : null;
+
+        // crear User
+        User u = new User(uid, displayName, email, photoUrl, null);
+
+        // guardar en Firestore
+        new UserRepository().upsertUser(u);
     }
 }
