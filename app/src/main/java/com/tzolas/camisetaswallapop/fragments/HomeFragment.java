@@ -37,15 +37,14 @@ public class HomeFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerProducts);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ProductsAdapter(new java.util.ArrayList<>());
-        recyclerView.setAdapter(adapter);
-
-        // ✅ CLICK → abrir detalle
-        adapter.setOnItemClickListener(product -> {
+        adapter = new ProductsAdapter(requireContext(), new java.util.ArrayList<>(), product -> {
             Intent i = new Intent(getActivity(), ProductDetailActivity.class);
             i.putExtra("productId", product.getId());
             startActivity(i);
         });
+        recyclerView.setAdapter(adapter);
+
+
 
         // ViewModel
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);

@@ -14,59 +14,70 @@ import com.bumptech.glide.Glide;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.models.Product;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHolder> {
 
     private List<Product> products;
-    private Context context;
+    private final Context context;
+    private OnItemClickListener listener;
 
-    // ✅ Nuevo: Callback de click
+    // ✅ Interfaz para click de producto
     public interface OnItemClickListener {
         void onItemClick(Product product);
     }
 
-    private OnItemClickListener listener;
+    // ✅ Constructor principal (con listener)
+    public ProductsAdapter(Context context, List<Product> products, OnItemClickListener listener) {
+        this.context = context;
+        this.products = products != null ? products : new ArrayList<>();
+        this.listener = listener;
+    }
 
-    // ✅ Método para registrar listener
+    // ✅ Constructor secundario (sin listener)
+    // → Permite crear el adapter como antes: new ProductsAdapter(context, list)
+    public ProductsAdapter(Context context, List<Product> products) {
+        this(context, products, null);
+    }
+
+    // ✅ Constructor mínimo (compatibilidad con código antiguo)
+    // → new ProductsAdapter(new ArrayList<>())
+    public ProductsAdapter(List<Product> products) {
+        this(null, products, null);
+    }
+
+    // ✅ Método para asignar/actualizar el listener dinámicamente
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
 
-    public ProductsAdapter(List<Product> products) {
-        this.products = products;
-    }
-
+    // ✅ Método para actualizar productos
     public void setProducts(List<Product> products) {
-        this.products = products;
+        this.products = products != null ? products : new ArrayList<>();
         notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
-
-        View view = LayoutInflater.from(context)
-                .inflate(R.layout.item_product, parent, false);
-
+        Context ctx = context != null ? context : parent.getContext();
+        View view = LayoutInflater.from(ctx).inflate(R.layout.item_product, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
         Product p = products.get(position);
 
         holder.title.setText(p.getTitle());
         holder.price.setText(p.getPrice() + "€");
 
-        Glide.with(context)
+        Glide.with(holder.itemView.getContext())
                 .load(p.getImageUrl())
-                .placeholder(R.drawable.bg_image_placeholder) // opcional
+                .placeholder(R.drawable.bg_image_placeholder)
                 .into(holder.image);
 
-        // ✅ OnClick
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(p);
         });
@@ -74,20 +85,18 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return products.size();
+        return products != null ? products.size() : 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView title, price;
         ImageView image;
 
-        public ViewHolder(@NonNull View item) {
-            super(item);
-
-            title = item.findViewById(R.id.txtTitle);
-            price = item.findViewById(R.id.txtPrice);
-            image = item.findViewById(R.id.imgProduct);
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.txtTitle);
+            price = itemView.findViewById(R.id.txtPrice);
+            image = itemView.findViewById(R.id.imgProduct);
         }
     }
 }

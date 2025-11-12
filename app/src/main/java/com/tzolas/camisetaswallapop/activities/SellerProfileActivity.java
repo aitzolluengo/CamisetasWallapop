@@ -36,8 +36,11 @@ public class SellerProfileActivity extends AppCompatActivity {
         recycler = findViewById(R.id.recyclerSellerProducts);
 
         recycler.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ProductsAdapter(productList);
-        recycler.setAdapter(adapter);
+        adapter = new ProductsAdapter(this, productList, product -> {
+            // Qué pasa cuando se hace click en un producto
+            // Por ejemplo, abrir detalles del producto
+            // (puedes dejarlo vacío si no quieres clics aquí)
+        });        recycler.setAdapter(adapter);
 
         String sellerId = getIntent().getStringExtra("sellerId");
 

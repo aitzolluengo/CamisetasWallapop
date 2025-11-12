@@ -40,6 +40,9 @@
 
         <activity android:name=".activities.ChatActivity"/>
 
-     </application>
+        <activity android:name=".activities.SearchResultsActivity" />
+
+
+    </application>
 
  </manifest>
