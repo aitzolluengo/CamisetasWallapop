@@ -104,9 +104,13 @@ public class PerfilFragment extends Fragment {
 
         // LOGOUT
         btnLogout.setOnClickListener(v -> {
+            if (ratingListener != null) ratingListener.remove(); // por si acaso
             auth.signOut();
-            requireActivity().finish();
+
+            // cerrar actividad completa
+            requireActivity().finishAffinity();
         });
+
 
         // CONFIG LISTAS
         ventaAdapter = new ProductsAdapter(requireContext(), listaVenta,

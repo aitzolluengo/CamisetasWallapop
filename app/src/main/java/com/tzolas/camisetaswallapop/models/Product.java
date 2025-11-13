@@ -21,6 +21,7 @@ public class Product {
     private String buyerId;
     private String orderId;
     private long soldAt;
+    private boolean favourite;
 
     // 🔴 IMPORTANTE: constructor vacío PÚBLICO
     public Product() { }
@@ -97,4 +98,7 @@ public class Product {
 
     public long getSoldAt() { return soldAt; }
     public void setSoldAt(long soldAt) { this.soldAt = soldAt; }
+
+    public boolean isFavorite() { return favourite; }
+    public void setFavorite(boolean favorite) { this.favourite = favorite; }
 }

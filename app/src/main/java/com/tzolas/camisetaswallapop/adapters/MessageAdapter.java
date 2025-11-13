@@ -3,6 +3,7 @@ package com.tzolas.camisetaswallapop.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,8 +21,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
 
-    private List<Message> messages;
-    private String myUid;
+    private final List<Message> messages;
+    private final String myUid;
 
     public MessageAdapter(List<Message> messages, String myUid) {
         this.messages = messages;
@@ -38,16 +39,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
-
-        View view;
-
         if (type == TYPE_SENT) {
-            view = LayoutInflater.from(parent.getContext())
+            View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_msg_right, parent, false);
             return new SentHolder(view);
-
         } else {
-            view = LayoutInflater.from(parent.getContext())
+            View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_msg_left, parent, false);
             return new ReceivedHolder(view);
         }
@@ -58,34 +55,69 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         Message m = messages.get(pos);
 
         if (holder instanceof SentHolder) {
-            ((SentHolder) holder).txtMessage.setText(m.getText());
-            ((SentHolder) holder).txtTime.setText(formatTime(m.getTimestamp()));
+            SentHolder h = (SentHolder) holder;
+
+            h.txtMessage.setText(m.getText());
+            h.txtTime.setText(formatTime(m.getTimestamp()));
+
+            int lastSentIndex = -1;
+            for (int i = messages.size() - 1; i >= 0; i--) {
+                if (messages.get(i).getSenderId().equals(myUid)) {
+                    lastSentIndex = i;
+                    break;
+                }
+            }
+
+            if (pos == lastSentIndex) {
+                h.txtStatusText.setVisibility(View.VISIBLE);
+
+                if (m.isRead()) {
+                    h.txtStatusText.setText("Leído");
+                    h.txtStatusText.setTextColor(0xFF5CC8FF);
+                } else if (m.isDelivered()) {
+                    h.txtStatusText.setText("Entregado");
+                    h.txtStatusText.setTextColor(0xFFBDBDBD);
+                } else {
+                    h.txtStatusText.setText("Enviado");
+                    h.txtStatusText.setTextColor(0xFF888888);
+                }
+
+            } else {
+                h.txtStatusText.setVisibility(View.GONE);
+            }
+
         } else {
-            ((ReceivedHolder) holder).txtMessage.setText(m.getText());
-            ((ReceivedHolder) holder).txtTime.setText(formatTime(m.getTimestamp()));
+            ReceivedHolder h = (ReceivedHolder) holder;
+            h.txtMessage.setText(m.getText());
+            h.txtTime.setText(formatTime(m.getTimestamp()));
         }
 
-        // 🔥 animación de aparición
         holder.itemView.setAlpha(0f);
-        holder.itemView.animate().alpha(1f).setDuration(150).start();
+        holder.itemView.animate().alpha(1f).setDuration(120).start();
     }
 
     private String formatTime(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-        return sdf.format(new Date(timestamp));
+        return new SimpleDateFormat("HH:mm").format(new Date(timestamp));
     }
 
+    // ==========================================
+    // HOLDERS
+    // ==========================================
+
     static class SentHolder extends RecyclerView.ViewHolder {
-        TextView txtMessage, txtTime;
+        TextView txtMessage, txtTime, txtStatusText;
+
         public SentHolder(@NonNull View item) {
             super(item);
             txtMessage = item.findViewById(R.id.txtMessageRight);
             txtTime = item.findViewById(R.id.txtTimeRight);
+            txtStatusText = item.findViewById(R.id.txtStatusText);
         }
     }
 
     static class ReceivedHolder extends RecyclerView.ViewHolder {
         TextView txtMessage, txtTime;
+
         public ReceivedHolder(@NonNull View item) {
             super(item);
             txtMessage = item.findViewById(R.id.txtMessageLeft);
@@ -97,5 +129,4 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public int getItemCount() {
         return messages.size();
     }
-
 }

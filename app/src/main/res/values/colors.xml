@@ -13,4 +13,6 @@
 
     <color name="green">#4CAF50</color>
 
+    <color name="tick_gray">#888888</color>
+    <color name="tick_blue">#0A90FF</color>
 </resources>

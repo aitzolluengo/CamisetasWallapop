@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.adapters.MessageAdapter;
@@ -33,12 +34,12 @@ public class ChatActivity extends AppCompatActivity {
     private ImageView imgChatUser;
     private TextView txtChatUserName;
 
-    private String chatId, sellerId, productId;
-    private String currentUserId;
+    private String chatId, sellerId, productId, currentUserId;
 
     private MessageAdapter adapter;
-    private List<Message> messageList = new ArrayList<>();
+    private final List<Message> messageList = new ArrayList<>();
 
+    private ListenerRegistration messagesListener;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
@@ -46,96 +47,134 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        // ✅ Extra info del intent
         chatId = getIntent().getStringExtra("chatId");
         sellerId = getIntent().getStringExtra("sellerId");
         productId = getIntent().getStringExtra("productId");
         currentUserId = FirebaseAuth.getInstance().getUid();
 
-        // ✅ Referencias UI
-        recyclerView   = findViewById(R.id.recyclerMessages);
-        inputMessage   = findViewById(R.id.editMessage);
-        btnSend        = findViewById(R.id.btnSend);
-        imgChatUser    = findViewById(R.id.imgChatUser);
-        txtChatUserName = findViewById(R.id.txtChatUserName);
+        if (chatId == null || currentUserId == null) {
+            finish();
+            return;
+        }
 
+        initViews();
         setupRecycler();
-        listenMessages();
         loadChatUserInfo();
+        listenMessages();
 
         btnSend.setOnClickListener(v -> sendMessage());
     }
 
-    /** =========================================================
-     * ✅ Cargar foto + nombre del otro usuario
-     * ========================================================= */
-    private void loadChatUserInfo() {
-        if (sellerId == null) return;
-
-        db.collection("users")
-                .document(sellerId)
-                .get()
-                .addOnSuccessListener(doc -> {
-                    if (!doc.exists()) return;
-
-                    String name = doc.getString("name");
-                    String photo = doc.getString("photo");
-
-                    txtChatUserName.setText(name != null ? name : "Usuario");
-
-                    if (photo != null && !photo.isEmpty()) {
-                        Glide.with(this)
-                                .load(photo)
-                                .placeholder(R.drawable.ic_user_placeholder)
-                                .circleCrop()
-                                .into(imgChatUser);
-                    } else {
-                        imgChatUser.setImageResource(R.drawable.ic_user_placeholder);
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Log.e("ChatActivity", "Error cargando usuario del chat", e)
-                );
+    private void initViews() {
+        recyclerView = findViewById(R.id.recyclerMessages);
+        inputMessage = findViewById(R.id.editMessage);
+        btnSend = findViewById(R.id.btnSend);
+        imgChatUser = findViewById(R.id.imgChatUser);
+        txtChatUserName = findViewById(R.id.txtChatUserName);
     }
 
     /** =========================================================
-     * ✅ RecyclerView setup
+     * CONFIG LISTA
      * ========================================================= */
     private void setupRecycler() {
         adapter = new MessageAdapter(messageList, currentUserId);
 
         LinearLayoutManager lm = new LinearLayoutManager(this);
-        lm.setStackFromEnd(true); // ✅ los mensajes nuevos se alinean abajo
+        lm.setStackFromEnd(true);
 
         recyclerView.setLayoutManager(lm);
         recyclerView.setAdapter(adapter);
     }
 
     /** =========================================================
-     * ✅ LEER MENSAJES EN TIEMPO REAL
+     * CARGAR DATOS DEL USUARIO DEL CHAT
+     * ========================================================= */
+    private void loadChatUserInfo() {
+        if (sellerId == null) return;
+
+        db.collection("users").document(sellerId).get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) return;
+
+                    txtChatUserName.setText(doc.getString("name"));
+
+                    String photo = doc.getString("photo");
+                    Glide.with(this)
+                            .load(photo != null ? photo : R.drawable.ic_user_placeholder)
+                            .circleCrop()
+                            .into(imgChatUser);
+                });
+    }
+
+    /** =========================================================
+     * 🔥 ESCUCHAR MENSAJES
      * ========================================================= */
     private void listenMessages() {
-        db.collection("chats")
+
+        messagesListener = db.collection("chats")
                 .document(chatId)
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null || value == null) return;
+                .addSnapshotListener((snap, error) -> {
+
+                    if (error != null || snap == null) return;
 
                     messageList.clear();
-                    messageList.addAll(value.toObjects(Message.class));
+
+                    for (var doc : snap.getDocuments()) {
+                        Message m = doc.toObject(Message.class);
+                        if (m != null) {
+                            m.setId(doc.getId());
+                            messageList.add(m);
+                        }
+                    }
+
+                    markStates();
+
                     adapter.notifyDataSetChanged();
 
                     if (!messageList.isEmpty()) {
-                        recyclerView.smoothScrollToPosition(messageList.size() - 1);
+                        recyclerView.scrollToPosition(messageList.size() - 1);
                     }
                 });
     }
 
     /** =========================================================
-     * ✅ ENVIAR MENSAJE
+     * 🔥 ACTUALIZAR ESTADOS (ENTREGADO / LEÍDO)
+     * ========================================================= */
+    private void markStates() {
+
+        for (Message msg : messageList) {
+
+            // Mensaje recibido (del otro)
+            if (!msg.getSenderId().equals(currentUserId)) {
+
+                // ENTREGADO
+                if (!msg.isDelivered()) {
+                    db.collection("chats")
+                            .document(chatId)
+                            .collection("messages")
+                            .document(msg.getId())
+                            .update("delivered", true);
+                }
+
+                // LEÍDO
+                if (!msg.isRead()) {
+                    db.collection("chats")
+                            .document(chatId)
+                            .collection("messages")
+                            .document(msg.getId())
+                            .update("read", true);
+                }
+            }
+        }
+    }
+
+    /** =========================================================
+     * 🔥 ENVIAR MENSAJE
      * ========================================================= */
     private void sendMessage() {
+
         String txt = inputMessage.getText().toString().trim();
         if (txt.isEmpty()) return;
 
@@ -148,6 +187,9 @@ public class ChatActivity extends AppCompatActivity {
                 System.currentTimeMillis()
         );
 
+        m.setDelivered(false);
+        m.setRead(false);
+
         db.collection("chats")
                 .document(chatId)
                 .collection("messages")
@@ -157,5 +199,16 @@ public class ChatActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Log.e("ChatActivity", "Error enviando mensaje", e)
                 );
+    }
+
+    /** =========================================================
+     * LIMPIAR LISTENERS
+     * ========================================================= */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (messagesListener != null) {
+            messagesListener.remove();
+        }
     }
 }

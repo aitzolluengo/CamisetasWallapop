@@ -57,7 +57,7 @@ public class SearchResultsActivity extends AppCompatActivity {
             loadByQuery(query);
         } else {
             header.setText("Resultados");
-            adapter.setProducts(new ArrayList<>());
+            adapter.updateProducts(new ArrayList<>());
         }
     }
 
@@ -94,7 +94,7 @@ public class SearchResultsActivity extends AppCompatActivity {
     private void onProductsLoaded(List<Product> products) {
         // Si quieres "muchos aleatorios", puedes limitar a, por ejemplo, 50:
         // if (products.size() > 50) products = products.subList(0, 50);
-        adapter.setProducts(products);
+        adapter.updateProducts(products);
     }
 
     // --- Sustituye esto por tu fuente real (Firestore, etc) ---

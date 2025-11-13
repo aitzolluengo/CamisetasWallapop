@@ -5,46 +5,85 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.tzolas.camisetaswallapop.models.Product;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
-import com.tzolas.camisetaswallapop.models.Product;
-import com.tzolas.camisetaswallapop.repositories.ProductRepository;
+import java.util.Set;
 
 public class HomeViewModel extends ViewModel {
 
-    private MutableLiveData<List<Product>> products = new MutableLiveData<>();
-    private ProductRepository repo = new ProductRepository();
+    private final MutableLiveData<List<Product>> products = new MutableLiveData<>();
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final String myUid = FirebaseAuth.getInstance().getUid();
 
     public HomeViewModel() {
-        loadProducts();
+        loadAllProducts();
     }
 
     public LiveData<List<Product>> getProducts() {
         return products;
     }
 
-    private void loadProducts() {
+    private void loadAllProducts() {
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        String myUserId = (user != null) ? user.getUid() : "";
+        // 1️⃣ Cargar favoritos primero si hay usuario logueado
+        if (myUid != null) {
+            db.collection("users")
+                    .document(myUid)
+                    .collection("favorites")
+                    .get()
+                    .addOnSuccessListener(favSnap -> {
 
-        repo.getProducts().addOnSuccessListener(query -> {
+                        Set<String> favoriteIds = new HashSet<>();
+                        favSnap.forEach(doc -> favoriteIds.add(doc.getId()));
 
-            List<Product> list = new ArrayList<>();
+                        loadProductsWithFavorites(favoriteIds);
+                    })
+                    .addOnFailureListener(e -> {
+                        // Si falla favoritos → cargar productos sin favoritos
+                        loadProductsWithFavorites(new HashSet<>());
+                    });
 
-            for (DocumentSnapshot d : query.getDocuments()) {
-                Product p = d.toObject(Product.class);
+        } else {
+            // No logueado → cargar sin favoritos
+            loadProductsWithFavorites(new HashSet<>());
+        }
+    }
 
-                if (p.getUserId() != null && !p.getUserId().equals(myUserId)) {
-                    list.add(p);
-                }
-            }
+    private void loadProductsWithFavorites(Set<String> favoriteIds) {
 
-            products.setValue(list);
-        });
+        db.collection("products")
+                .get()
+                .addOnSuccessListener(query -> {
+
+                    List<Product> list = new ArrayList<>();
+
+                    query.getDocuments().forEach(doc -> {
+
+                        Product p = doc.toObject(Product.class);
+                        if (p == null) return;
+
+                        // Asegurar ID
+                        p.setId(doc.getId());
+
+                        // Marcar favorito
+                        p.setFavorite(favoriteIds.contains(p.getId()));
+
+                        // Opcional: NO mostrar mis propios productos
+                        if (myUid != null && p.getUserId() != null && p.getUserId().equals(myUid)) {
+                            return; // saltar mis productos
+                        }
+
+                        list.add(p);
+                    });
+
+                    products.setValue(list);
+                })
+                .addOnFailureListener(e -> {
+                    products.setValue(new ArrayList<>());
+                });
     }
 }
