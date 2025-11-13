@@ -1,14 +1,16 @@
 package com.tzolas.camisetaswallapop.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -27,7 +29,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.tzolas.camisetaswallapop.R;
-import com.tzolas.camisetaswallapop.activities.LoginActivity;
+import com.tzolas.camisetaswallapop.activities.ProductDetailActivity;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
 
@@ -37,20 +39,26 @@ import java.util.Locale;
 
 public class PerfilFragment extends Fragment {
 
+    private static final int PICK_IMAGE = 2001;
+
     private TextView tvName, tvEmail, tvEmpty, txtRatingCount;
     private ImageView ivProfilePhoto;
-    private Button btnLogout;
     private RatingBar ratingBar;
 
+    private Button btnLogout, btnEditProfile;
+    private Button btnEnVenta, btnComprados;
+
+    private RecyclerView recyclerVenta, recyclerComprados;
+    private ProductsAdapter ventaAdapter, compradosAdapter;
+
+    private final List<Product> listaVenta = new ArrayList<>();
+    private final List<Product> listaComprados = new ArrayList<>();
+
     private FirebaseAuth auth;
-    private String myUid;
+    private FirebaseFirestore db;
+    private FirebaseUser user;
+
     private ListenerRegistration ratingListener;
-
-    private RecyclerView recyclerView;
-    private ProductsAdapter adapter;
-    private final List<Product> listaProductos = new ArrayList<>();
-
-    public PerfilFragment() {}
 
     @SuppressLint("MissingInflatedId")
     @Nullable
@@ -61,132 +69,210 @@ public class PerfilFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
-        // UI
+        // UI inicial
         tvName = view.findViewById(R.id.tvName);
         tvEmail = view.findViewById(R.id.tvEmail);
         ivProfilePhoto = view.findViewById(R.id.ivProfilePhoto);
-        btnLogout = view.findViewById(R.id.btnLogout);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
-        recyclerView = view.findViewById(R.id.recyclerView);
-
-        // ⭐️ rating UI
-        ratingBar = view.findViewById(R.id.ratingBarProfile);
         txtRatingCount = view.findViewById(R.id.txtRatingCount);
+        ratingBar = view.findViewById(R.id.ratingBarProfile);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ProductsAdapter(listaProductos); // tu adapter admite este ctor
-        recyclerView.setAdapter(adapter);
+        btnLogout = view.findViewById(R.id.btnLogout);
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
 
+        btnEnVenta = view.findViewById(R.id.btnEnVenta);
+        btnComprados = view.findViewById(R.id.btnComprados);
+
+        recyclerVenta = view.findViewById(R.id.recyclerVenta);
+        recyclerComprados = view.findViewById(R.id.recyclerComprados);
+
+        // Firestore
+        db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
-        myUid = (user != null) ? user.getUid() : null;
+        user = auth.getCurrentUser();
 
+        // Mostrar datos usuario
         if (user != null) {
             mostrarDatosUsuario(user);
-            cargarMisProductos(user.getUid());
-        } else {
-            Toast.makeText(getContext(), "Error: no hay sesión activa", Toast.LENGTH_SHORT).show();
+            cargarProductosVentaYComprados(user.getUid());
         }
 
+        // EDITAR PERFIL (solo foto por ahora)
+        btnEditProfile.setOnClickListener(v -> {
+            // mostrar menú con opciones
+            mostrarOpcionesEditarPerfil();
+        });
+
+        // LOGOUT
         btnLogout.setOnClickListener(v -> {
             auth.signOut();
-            startActivity(new Intent(getActivity(), LoginActivity.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
             requireActivity().finish();
         });
+
+        // CONFIG LISTAS
+        ventaAdapter = new ProductsAdapter(requireContext(), listaVenta,
+                p -> abrirDetalle(p.getId()));
+
+        compradosAdapter = new ProductsAdapter(requireContext(), listaComprados,
+                p -> abrirDetalle(p.getId()));
+
+        recyclerVenta.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerComprados.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        recyclerVenta.setAdapter(ventaAdapter);
+        recyclerComprados.setAdapter(compradosAdapter);
+
+        btnEnVenta.setOnClickListener(v -> mostrarVenta());
+        btnComprados.setOnClickListener(v -> mostrarComprados());
 
         return view;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        // 🔴 Listener en tiempo real para rating
-        if (myUid == null) return;
-        ratingListener = FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(myUid)
-                .addSnapshotListener((doc, e) -> {
-                    if (e != null) {
-                        Log.e("PerfilFragment", "rating listener error", e);
-                        return;
+    private void mostrarDatosUsuario(FirebaseUser user) {
+        tvName.setText(user.getDisplayName() != null ? user.getDisplayName() : "Sin nombre");
+        tvEmail.setText(user.getEmail());
+
+        Uri photo = user.getPhotoUrl();
+        Glide.with(this)
+                .load(photo != null ? photo : R.drawable.ic_user_placeholder)
+                .circleCrop()
+                .into(ivProfilePhoto);
+    }
+
+    /** 🔥 Cargar lista de productos en venta/vendidos y comprados */
+    private void cargarProductosVentaYComprados(String uid) {
+        // Productos que yo subí
+        db.collection("products")
+                .whereEqualTo("userId", uid)
+                .get()
+                .addOnSuccessListener(q -> {
+                    listaVenta.clear();
+                    for (DocumentSnapshot doc : q) {
+                        Product p = doc.toObject(Product.class);
+                        if (p != null) {
+                            p.setId(doc.getId());
+                            listaVenta.add(p);
+                        }
                     }
-                    updateRatingHeader(doc);
+                    ventaAdapter.notifyDataSetChanged();
+                });
+
+        // Productos donde yo soy buyerId (he comprado)
+        db.collection("products")
+                .whereEqualTo("buyerId", uid)
+                .get()
+                .addOnSuccessListener(q -> {
+                    listaComprados.clear();
+                    for (DocumentSnapshot doc : q) {
+                        Product p = doc.toObject(Product.class);
+                        if (p != null) {
+                            p.setId(doc.getId());
+                            listaComprados.add(p);
+                        }
+                    }
+                    compradosAdapter.notifyDataSetChanged();
                 });
     }
 
+    private void abrirDetalle(String id) {
+        Intent intent = new Intent(getContext(), ProductDetailActivity.class);
+        intent.putExtra("productId", id);
+        startActivity(intent);
+    }
+
+    /** Cambiar entre listas */
+    private void mostrarVenta() {
+        recyclerVenta.setVisibility(View.VISIBLE);
+        recyclerComprados.setVisibility(View.GONE);
+    }
+
+    private void mostrarComprados() {
+        recyclerVenta.setVisibility(View.GONE);
+        recyclerComprados.setVisibility(View.VISIBLE);
+    }
+
+    /** Editar foto */
+    private void abrirGaleria() {
+        Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(pick, PICK_IMAGE);
+    }
+
     @Override
-    public void onStop() {
-        super.onStop();
-        if (ratingListener != null) {
-            ratingListener.remove();
-            ratingListener = null;
+    public void onActivityResult(int r, int res, @Nullable Intent data) {
+        super.onActivityResult(r, res, data);
+        if (r == PICK_IMAGE && res == Activity.RESULT_OK && data != null) {
+            Uri img = data.getData();
+            ivProfilePhoto.setImageURI(img);
+            // Aquí puedes actualizar Storage + Firestore si quieres
         }
     }
+    private void mostrarDialogoEditarNombre() {
+        View view = LayoutInflater.from(getContext())
+                .inflate(R.layout.dialog_edit_name, null, false);
 
-    private void updateRatingHeader(DocumentSnapshot doc) {
-        if (doc == null || !doc.exists()) return;
+        EditText edtName = view.findViewById(R.id.edtNewName);
 
-        Double sum = doc.getDouble("ratingSum");
-        Long count = doc.getLong("ratingCount");
+        edtName.setText(tvName.getText()); // mostrar nombre actual
 
-        double ratingSum = (sum != null) ? sum : 0.0;
-        long ratingCount = (count != null) ? count : 0;
-        double avg = (ratingCount > 0) ? (ratingSum / ratingCount) : 0.0;
-
-        if (ratingBar != null) ratingBar.setRating((float) avg);
-        if (txtRatingCount != null) {
-            txtRatingCount.setText(
-                    ratingCount == 0
-                            ? "(Sin valoraciones)"
-                            : String.format(Locale.getDefault(), "(%.1f★ · %d valoraciones)", avg, ratingCount)
-            );
-        }
-    }
-
-    private void mostrarDatosUsuario(FirebaseUser user) {
-        String name = user.getDisplayName();
-        tvName.setText((name != null && !name.isEmpty()) ? name : "Usuario sin nombre");
-        tvEmail.setText(user.getEmail());
-
-        Uri photoUrl = user.getPhotoUrl();
-        if (photoUrl != null) {
-            Glide.with(this)
-                    .load(photoUrl)
-                    .placeholder(R.drawable.ic_user_placeholder)
-                    .circleCrop()
-                    .into(ivProfilePhoto);
-        } else {
-            ivProfilePhoto.setImageResource(R.drawable.ic_user_placeholder);
-        }
-    }
-
-    private void cargarMisProductos(String uid) {
-        FirebaseFirestore.getInstance()
-                .collection("products")
-                .whereEqualTo("userId", uid)
-                .get()
-                .addOnSuccessListener(query -> {
-                    listaProductos.clear();
-                    for (DocumentSnapshot doc : query.getDocuments()) {
-                        Product p = doc.toObject(Product.class);
-                        if (p != null) listaProductos.add(p);
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Editar nombre")
+                .setView(view)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+                    String nuevoNombre = edtName.getText().toString().trim();
+                    if (nuevoNombre.isEmpty()) {
+                        Toast.makeText(getContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
+                        return;
                     }
-
-                    adapter.notifyDataSetChanged();
-
-                    // Mostrar/ocultar mensaje vacío
-                    if (listaProductos.isEmpty()) {
-                        tvEmpty.setVisibility(View.VISIBLE);
-                        recyclerView.setVisibility(View.GONE);
-                    } else {
-                        tvEmpty.setVisibility(View.GONE);
-                        recyclerView.setVisibility(View.VISIBLE);
-                    }
-
+                    actualizarNombreEnFirebase(nuevoNombre);
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Error cargando productos", Toast.LENGTH_SHORT).show()
-                );
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
+    private void actualizarNombreEnFirebase(String nuevoNombre) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        // 1) Actualizar en Firebase Auth
+        user.updateProfile(
+                new com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(nuevoNombre)
+                        .build()
+        ).addOnSuccessListener(a -> {
+
+            tvName.setText(nuevoNombre); // actualizar en pantalla
+
+            // 2) Actualizar en Firestore
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(user.getUid())
+                    .update("name", nuevoNombre)
+                    .addOnSuccessListener(v -> {
+                        Toast.makeText(getContext(), "Nombre actualizado", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(getContext(), "Error Firestore: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+
+        }).addOnFailureListener(e ->
+                Toast.makeText(getContext(), "Error al actualizar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+        );
+    }
+    private void mostrarOpcionesEditarPerfil() {
+
+        String[] opciones = {"Cambiar foto", "Cambiar nombre"};
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Editar perfil")
+                .setItems(opciones, (dialog, which) -> {
+                    if (which == 0) {
+                        abrirGaleria();
+                    } else if (which == 1) {
+                        mostrarDialogoEditarNombre();
+                    }
+                })
+                .show();
+    }
+
+
+
 }
