@@ -16,11 +16,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.models.Chat;
 import com.tzolas.camisetaswallapop.models.Product;
@@ -38,12 +36,12 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView img, imgSeller;
     private TextView title, price, description, txtSellerName;
-    private Button btnChat, btnVender;
+    private Button btnChat, btnVender, btnEliminar;
     private LinearLayout containerExtra;
 
     private FirebaseFirestore db;
     private Product currentProduct;
-    private String productId; // ← campo real (no lo sombreamos con una local)
+    private String productId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +58,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         imgSeller = findViewById(R.id.imgSeller);
         txtSellerName = findViewById(R.id.txtSellerName);
         btnVender = findViewById(R.id.btnVender);
+        btnEliminar = findViewById(R.id.btnEliminar);
 
         db = FirebaseFirestore.getInstance();
 
-        // Recupera el id del intent y carga
         productId = getIntent().getStringExtra("productId");
         if (productId != null && !productId.trim().isEmpty()) {
             loadProduct(productId);
@@ -84,7 +82,6 @@ public class ProductDetailActivity extends AppCompatActivity {
                     Product p = doc.toObject(Product.class);
                     if (p == null) return;
 
-                    // Si en tu modelo no guardas el id dentro, lo seteamos
                     if (p.getId() == null || p.getId().isEmpty()) {
                         p.setId(doc.getId());
                     }
@@ -105,14 +102,43 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                     loadSellerInfo(p.getUserId());
 
-                    btnChat.setOnClickListener(v -> startChat(p));
-
-                    // Importante: decidir visibilidad del botón Vender
-                    updateSellButtonVisibility();
+                    // Lógica de dueño / comprador
+                    setupOwnerOrBuyerUI();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error cargando producto", Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    /** Decide si mostrar chat o editar/eliminar según si es tuyo */
+    private void setupOwnerOrBuyerUI() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String myUid = (user != null) ? user.getUid() : null;
+
+        boolean isOwner = myUid != null && currentProduct.getUserId().equals(myUid);
+
+        if (isOwner) {
+            // Soy el dueño → NO chatear conmigo mismo, SÍ editar/eliminar
+            btnChat.setVisibility(View.GONE);
+            findViewById(R.id.sellerBlock).setVisibility(View.GONE);
+
+            btnVender.setVisibility(View.VISIBLE);
+            btnVender.setText("Editar producto");
+            btnVender.setOnClickListener(v -> abrirDialogoEditarProducto());
+
+            btnEliminar.setVisibility(View.VISIBLE);
+            btnEliminar.setOnClickListener(v -> confirmarEliminarProducto());
+
+        } else {
+            // No soy el dueño → ver vendedor y chatear
+            btnChat.setVisibility(View.VISIBLE);
+            findViewById(R.id.sellerBlock).setVisibility(View.VISIBLE);
+
+            btnVender.setVisibility(View.GONE);
+            btnEliminar.setVisibility(View.GONE);
+
+            btnChat.setOnClickListener(v -> startChat(currentProduct));
+        }
     }
 
     /** =========================================================
@@ -200,7 +226,6 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                     String chatId = repo.generateId();
 
-                    // Crea el doc del chat con lista de participantes
                     db.collection("chats")
                             .document(chatId)
                             .set(new HashMap<String, Object>() {{
@@ -224,95 +249,88 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * Botón VENDER
+     * EDITAR PRODUCTO (solo dueño)
      * ========================================================= */
-    private void updateSellButtonVisibility() {
-        String uid = FirebaseAuth.getInstance().getUid();
-        boolean show = currentProduct != null
-                && uid != null
-                && uid.equals(currentProduct.getUserId())
-                && !currentProduct.isSold();
-        btnVender.setVisibility(show ? View.VISIBLE : View.GONE);
+    private void abrirDialogoEditarProducto() {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_product, null);
 
-        if (show) {
-            btnVender.setOnClickListener(v -> showSellDialog());
-        }
-    }
+        EditText edtTitle = view.findViewById(R.id.edtEditTitle);
+        EditText edtPrice = view.findViewById(R.id.edtEditPrice);
+        EditText edtDesc = view.findViewById(R.id.edtEditDescription);
 
-    private void showSellDialog() {
-        View v = LayoutInflater.from(this).inflate(R.layout.dialog_sell_product, null, false);
-        EditText edt = v.findViewById(R.id.edtBuyerEmail);
+        edtTitle.setText(currentProduct.getTitle());
+        edtPrice.setText(String.valueOf(currentProduct.getPrice()));
+        edtDesc.setText(currentProduct.getDescription());
 
         new AlertDialog.Builder(this)
-                .setTitle("Vender producto")
-                .setView(v)
-                .setPositiveButton("Confirmar", (d, w) -> {
-                    String email = edt.getText().toString().trim();
-                    if (email.isEmpty()) {
-                        Toast.makeText(this, "Introduce el email del comprador", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    findBuyerAndSell(email);
+                .setTitle("Editar producto")
+                .setView(view)
+                .setPositiveButton("Guardar", (d, w) -> {
+                    String t = edtTitle.getText().toString().trim();
+                    String pr = edtPrice.getText().toString().trim();
+                    String desc = edtDesc.getText().toString().trim();
+                    guardarEdicionProducto(t, pr, desc);
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
-    private void findBuyerAndSell(String buyerEmail) {
-        // Busca el comprador por email en colección users
-        db.collection("users")
-                .whereEqualTo("email", buyerEmail)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(snap -> {
-                    if (snap.isEmpty()) {
-                        Toast.makeText(this, "No existe un usuario con ese email", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    String buyerId = snap.getDocuments().get(0).getId();
-                    createOrderAndMarkSold(buyerId);
+    private void guardarEdicionProducto(String newTitle, String newPrice, String newDesc) {
+        if (currentProduct == null) return;
+
+        double priceValue;
+        try {
+            priceValue = Double.parseDouble(newPrice);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Precio inválido", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("title", newTitle);
+        updates.put("price", priceValue);
+        updates.put("description", newDesc);
+
+        FirebaseFirestore.getInstance()
+                .collection("products")
+                .document(currentProduct.getId())
+                .update(updates)
+                .addOnSuccessListener(v -> {
+                    Toast.makeText(this, "Producto actualizado", Toast.LENGTH_SHORT).show();
+                    title.setText(newTitle);
+                    description.setText(newDesc);
+                    price.setText(String.format(Locale.getDefault(), "%.2f€", priceValue));
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error buscando comprador: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Error al actualizar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
 
-    private void createOrderAndMarkSold(String buyerId) {
+    /** =========================================================
+     * ELIMINAR PRODUCTO (solo dueño)
+     * ========================================================= */
+    private void confirmarEliminarProducto() {
+        new AlertDialog.Builder(this)
+                .setTitle("Eliminar producto")
+                .setMessage("¿Seguro que quieres eliminar este producto?")
+                .setPositiveButton("Eliminar", (d, w) -> eliminarProducto())
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void eliminarProducto() {
         if (currentProduct == null) return;
-        String sellerId = FirebaseAuth.getInstance().getUid();
-        if (sellerId == null) return;
 
-        DocumentReference prodRef = db.collection("products").document(currentProduct.getId());
-        DocumentReference orderRef = db.collection("orders").document(); // nueva orden
-
-        db.runTransaction(trx -> {
-            // 1) Orden
-            Map<String, Object> order = new HashMap<>();
-            order.put("id", orderRef.getId());
-            order.put("productId", currentProduct.getId());
-            order.put("sellerId", sellerId);
-            order.put("buyerId", buyerId);
-            order.put("price", currentProduct.getPrice());
-            order.put("status", "completed"); // o "pending"
-            order.put("timestamp", FieldValue.serverTimestamp());
-            trx.set(orderRef, order);
-
-            // 2) Producto vendido
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("sold", true);
-            updates.put("buyerId", buyerId);
-            updates.put("orderId", orderRef.getId());
-            updates.put("soldAt", System.currentTimeMillis());
-            trx.set(prodRef, updates, SetOptions.merge());
-
-            return null;
-        }).addOnSuccessListener(v -> {
-            Toast.makeText(this, "¡Producto vendido!", Toast.LENGTH_SHORT).show();
-            currentProduct.setSold(true);
-            currentProduct.setBuyerId(buyerId);
-            btnVender.setVisibility(View.GONE);
-        }).addOnFailureListener(e ->
-                Toast.makeText(this, "Error al vender: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-        );
+        FirebaseFirestore.getInstance()
+                .collection("products")
+                .document(currentProduct.getId())
+                .delete()
+                .addOnSuccessListener(v -> {
+                    Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
     }
 }
