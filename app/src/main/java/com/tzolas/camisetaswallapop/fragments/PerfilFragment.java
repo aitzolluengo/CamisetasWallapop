@@ -30,29 +30,33 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.ProductDetailActivity;
+import com.tzolas.camisetaswallapop.adapters.OffersAdapter;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 public class PerfilFragment extends Fragment {
 
     private static final int PICK_IMAGE = 2001;
 
-    private TextView tvName, tvEmail, tvEmpty, txtRatingCount;
+    private TextView tvName, tvEmail, txtRatingCount, txtOffersTitle;
     private ImageView ivProfilePhoto;
     private RatingBar ratingBar;
 
     private Button btnLogout, btnEditProfile;
     private Button btnEnVenta, btnComprados;
 
-    private RecyclerView recyclerVenta, recyclerComprados;
+    private RecyclerView recyclerVenta, recyclerComprados, recyclerOffers;
+
     private ProductsAdapter ventaAdapter, compradosAdapter;
+    private OffersAdapter offersAdapter;
 
     private final List<Product> listaVenta = new ArrayList<>();
     private final List<Product> listaComprados = new ArrayList<>();
+    private final List<Map<String, Object>> offersList = new ArrayList<>();
 
     private FirebaseAuth auth;
     private FirebaseFirestore db;
@@ -69,11 +73,12 @@ public class PerfilFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
-        // UI inicial
+        // UI
         tvName = view.findViewById(R.id.tvName);
         tvEmail = view.findViewById(R.id.tvEmail);
         ivProfilePhoto = view.findViewById(R.id.ivProfilePhoto);
         txtRatingCount = view.findViewById(R.id.txtRatingCount);
+        txtOffersTitle = view.findViewById(R.id.txtOffersTitle);
         ratingBar = view.findViewById(R.id.ratingBarProfile);
 
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -84,38 +89,44 @@ public class PerfilFragment extends Fragment {
 
         recyclerVenta = view.findViewById(R.id.recyclerVenta);
         recyclerComprados = view.findViewById(R.id.recyclerComprados);
+        recyclerOffers = view.findViewById(R.id.recyclerOffers);
 
-        // Firestore
+        recyclerOffers.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Firebase
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
 
-        // Mostrar datos usuario
-        if (user != null) {
-            mostrarDatosUsuario(user);
-            cargarProductosVentaYComprados(user.getUid());
-        }
-
-        // EDITAR PERFIL (solo foto por ahora)
-        btnEditProfile.setOnClickListener(v -> {
-            // mostrar menú con opciones
-            mostrarOpcionesEditarPerfil();
+        // Adaptador ofertas
+        offersAdapter = new OffersAdapter(offersList, offer -> {
+            String productId = (String) offer.get("productId");
+            Intent i = new Intent(getActivity(), ProductDetailActivity.class);
+            i.putExtra("productId", productId);
+            startActivity(i);
         });
 
-        // LOGOUT
-        btnLogout.setOnClickListener(v -> {
-            if (ratingListener != null) ratingListener.remove(); // por si acaso
-            auth.signOut();
+        recyclerOffers.setAdapter(offersAdapter);
 
-            // cerrar actividad completa
+        // Usuario cargado
+        if (user != null) {
+            mostrarDatosUsuario(user);
+            cargarRatingUsuario(user.getUid());
+            cargarProductosVentaYComprados(user.getUid());
+            cargarOfertasRecibidas(user.getUid());
+        }
+
+        btnEditProfile.setOnClickListener(v -> mostrarOpcionesEditarPerfil());
+
+        btnLogout.setOnClickListener(v -> {
+            if (ratingListener != null) ratingListener.remove();
+            auth.signOut();
             requireActivity().finishAffinity();
         });
 
-
-        // CONFIG LISTAS
+        // Listas de productos
         ventaAdapter = new ProductsAdapter(requireContext(), listaVenta,
                 p -> abrirDetalle(p.getId()));
-
         compradosAdapter = new ProductsAdapter(requireContext(), listaComprados,
                 p -> abrirDetalle(p.getId()));
 
@@ -131,6 +142,15 @@ public class PerfilFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (user != null) cargarOfertasRecibidas(user.getUid());
+    }
+
+    /** ================================
+     *   DATOS DEL USUARIO
+     * ================================ */
     private void mostrarDatosUsuario(FirebaseUser user) {
         tvName.setText(user.getDisplayName() != null ? user.getDisplayName() : "Sin nombre");
         tvEmail.setText(user.getEmail());
@@ -142,9 +162,38 @@ public class PerfilFragment extends Fragment {
                 .into(ivProfilePhoto);
     }
 
-    /** 🔥 Cargar lista de productos en venta/vendidos y comprados */
+    /** ================================
+     * 🔥 RATING EN TIEMPO REAL
+     * ================================ */
+    private void cargarRatingUsuario(String uid) {
+
+        if (ratingListener != null) ratingListener.remove();
+
+        ratingListener = db.collection("users")
+                .document(uid)
+                .addSnapshotListener((doc, error) -> {
+
+                    if (error != null || doc == null || !doc.exists()) return;
+
+                    long sum = doc.getLong("ratingSum") != null ? doc.getLong("ratingSum") : 0;
+                    long count = doc.getLong("ratingCount") != null ? doc.getLong("ratingCount") : 0;
+
+                    if (count == 0) {
+                        ratingBar.setRating(0);
+                        txtRatingCount.setText("(Sin valoraciones)");
+                    } else {
+                        float avg = (float) sum / count;
+                        ratingBar.setRating(avg);
+                        txtRatingCount.setText("(" + count + ")");
+                    }
+                });
+    }
+
+    /** ================================
+     *   PRODUCTOS EN VENTA / COMPRADOS
+     * ================================ */
     private void cargarProductosVentaYComprados(String uid) {
-        // Productos que yo subí
+
         db.collection("products")
                 .whereEqualTo("userId", uid)
                 .get()
@@ -160,7 +209,6 @@ public class PerfilFragment extends Fragment {
                     ventaAdapter.notifyDataSetChanged();
                 });
 
-        // Productos donde yo soy buyerId (he comprado)
         db.collection("products")
                 .whereEqualTo("buyerId", uid)
                 .get()
@@ -183,7 +231,6 @@ public class PerfilFragment extends Fragment {
         startActivity(intent);
     }
 
-    /** Cambiar entre listas */
     private void mostrarVenta() {
         recyclerVenta.setVisibility(View.VISIBLE);
         recyclerComprados.setVisibility(View.GONE);
@@ -194,7 +241,9 @@ public class PerfilFragment extends Fragment {
         recyclerComprados.setVisibility(View.VISIBLE);
     }
 
-    /** Editar foto */
+    /** ================================
+     * FOTO
+     * ================================ */
     private void abrirGaleria() {
         Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(pick, PICK_IMAGE);
@@ -206,61 +255,12 @@ public class PerfilFragment extends Fragment {
         if (r == PICK_IMAGE && res == Activity.RESULT_OK && data != null) {
             Uri img = data.getData();
             ivProfilePhoto.setImageURI(img);
-            // Aquí puedes actualizar Storage + Firestore si quieres
         }
     }
-    private void mostrarDialogoEditarNombre() {
-        View view = LayoutInflater.from(getContext())
-                .inflate(R.layout.dialog_edit_name, null, false);
 
-        EditText edtName = view.findViewById(R.id.edtNewName);
-
-        edtName.setText(tvName.getText()); // mostrar nombre actual
-
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Editar nombre")
-                .setView(view)
-                .setPositiveButton("Guardar", (dialog, which) -> {
-                    String nuevoNombre = edtName.getText().toString().trim();
-                    if (nuevoNombre.isEmpty()) {
-                        Toast.makeText(getContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    actualizarNombreEnFirebase(nuevoNombre);
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-    private void actualizarNombreEnFirebase(String nuevoNombre) {
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
-
-        // 1) Actualizar en Firebase Auth
-        user.updateProfile(
-                new com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                        .setDisplayName(nuevoNombre)
-                        .build()
-        ).addOnSuccessListener(a -> {
-
-            tvName.setText(nuevoNombre); // actualizar en pantalla
-
-            // 2) Actualizar en Firestore
-            FirebaseFirestore.getInstance()
-                    .collection("users")
-                    .document(user.getUid())
-                    .update("name", nuevoNombre)
-                    .addOnSuccessListener(v -> {
-                        Toast.makeText(getContext(), "Nombre actualizado", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e ->
-                            Toast.makeText(getContext(), "Error Firestore: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                    );
-
-        }).addOnFailureListener(e ->
-                Toast.makeText(getContext(), "Error al actualizar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-        );
-    }
+    /** ================================
+     * EDITAR PERFIL
+     * ================================ */
     private void mostrarOpcionesEditarPerfil() {
 
         String[] opciones = {"Cambiar foto", "Cambiar nombre"};
@@ -268,15 +268,108 @@ public class PerfilFragment extends Fragment {
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Editar perfil")
                 .setItems(opciones, (dialog, which) -> {
-                    if (which == 0) {
-                        abrirGaleria();
-                    } else if (which == 1) {
-                        mostrarDialogoEditarNombre();
-                    }
+                    if (which == 0) abrirGaleria();
+                    else mostrarDialogoEditarNombre();
                 })
                 .show();
     }
 
+    private void mostrarDialogoEditarNombre() {
+        View view = LayoutInflater.from(getContext())
+                .inflate(R.layout.dialog_edit_name, null, false);
 
+        EditText edtName = view.findViewById(R.id.edtNewName);
+        edtName.setText(tvName.getText());
 
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Editar nombre")
+                .setView(view)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+                    String nuevoNombre = edtName.getText().toString().trim();
+                    if (!nuevoNombre.isEmpty()) actualizarNombreEnFirebase(nuevoNombre);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void actualizarNombreEnFirebase(String nuevoNombre) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        user.updateProfile(
+                new com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(nuevoNombre)
+                        .build()
+        ).addOnSuccessListener(a -> {
+
+            tvName.setText(nuevoNombre);
+
+            db.collection("users")
+                    .document(user.getUid())
+                    .update("name", nuevoNombre)
+                    .addOnSuccessListener(v ->
+                            Toast.makeText(getContext(), "Nombre actualizado", Toast.LENGTH_SHORT).show()
+                    );
+
+        });
+    }
+
+    /** ================================
+     * OFERTAS RECIBIDAS
+     * ================================ */
+    private void cargarOfertasRecibidas(String sellerId) {
+
+        txtOffersTitle.setVisibility(View.GONE);
+        recyclerOffers.setVisibility(View.GONE);
+
+        offersList.clear();
+        offersAdapter.notifyDataSetChanged();
+
+        db.collection("products")
+                .whereEqualTo("userId", sellerId)
+                .get()
+                .addOnSuccessListener(productsQuery -> {
+
+                    for (DocumentSnapshot productDoc : productsQuery) {
+
+                        String productId = productDoc.getId();
+                        String productTitle = productDoc.getString("title");
+
+                        productDoc.getReference()
+                                .collection("offers")
+                                .whereEqualTo("status", "pending")
+                                .get()
+                                .addOnSuccessListener(offersQuery -> {
+
+                                    for (DocumentSnapshot offerDoc : offersQuery) {
+
+                                        Map<String, Object> offerData = offerDoc.getData();
+                                        if (offerData == null) continue;
+
+                                        offerData.put("productId", productId);
+                                        offerData.put("productTitle", productTitle);
+
+                                        String buyerId = offerDoc.getString("buyerId");
+
+                                        db.collection("users")
+                                                .document(buyerId)
+                                                .get()
+                                                .addOnSuccessListener(userDoc -> {
+
+                                                    offerData.put("buyerEmail",
+                                                            userDoc.getString("email"));
+
+                                                    offersList.add(offerData);
+                                                    offersAdapter.notifyDataSetChanged();
+
+                                                    txtOffersTitle.setVisibility(View.VISIBLE);
+                                                    recyclerOffers.setVisibility(View.VISIBLE);
+                                                });
+                                    }
+                                });
+                    }
+
+                });
+    }
 }

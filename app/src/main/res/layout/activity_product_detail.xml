@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!--  🔥 CARRUSEL DE IMÁGENES (VINTED/WALLAPOP STYLE) -->
+        <!--  🔥 CARRUSEL DE IMÁGENES -->
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPagerImages"
             android:layout_width="match_parent"
@@ -27,6 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"/>
+
 
         <!--  🔥 Título -->
         <TextView
@@ -47,6 +48,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+        <!--  🔥 ALERTA DE OFERTA -->
+        <TextView
+            android:id="@+id/txtOfferAlert"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tienes una oferta pendiente"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#D32F2F"
+            android:background="#FFF3E0"
+            android:padding="10dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"/>
+
         <!--  🔹 Línea divisor -->
         <View
             android:layout_marginTop="16dp"
@@ -54,7 +69,8 @@
             android:layout_height="1dp"
             android:background="#DDDDDD" />
 
-        <!--  🔥 Descripción -->
+
+        <!-- 🔥 Descripción -->
         <TextView
             android:text="Descripción"
             android:textSize="15sp"
@@ -72,12 +88,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <!--  🔹 Línea divisor -->
+
+        <!-- Línea -->
         <View
             android:layout_marginTop="20dp"
+            android:background="#DDDDDD"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD" />
+            android:layout_height="1dp" />
+
 
         <!-- 🔥 Contenedor dinámico de extras -->
         <LinearLayout
@@ -87,12 +105,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <!--  🔹 Línea divisor -->
+
+        <!-- Línea -->
         <View
             android:layout_marginTop="20dp"
+            android:background="#DDDDDD"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD" />
+            android:layout_height="1dp" />
+
 
         <!-- 🔥 BLOQUE DEL VENDEDOR -->
         <LinearLayout
@@ -143,35 +163,52 @@
 
         </LinearLayout>
 
-        <!-- 🔥 Botones -->
+
+        <!-- 🔵 BOTÓN CHAT (COMPRADOR) -->
         <Button
             android:id="@+id/btnChat"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
             android:text="Contactar vendedor"
             android:textAllCaps="false"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
             android:backgroundTint="#5D4CFF"
-            android:layout_marginTop="32dp"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"/>
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="32dp" />
 
+
+        <!-- 🟢 BOTÓN ENVIAR OFERTA (COMPRADOR) -->
         <Button
-            android:id="@+id/btnVender"
+            android:id="@+id/btnOferta"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Editar producto"
+            android:layout_height="48dp"
+            android:text="Enviar oferta"
             android:textAllCaps="false"
+            android:backgroundTint="#00897B"
+            android:textColor="#FFFFFF"
             android:layout_marginTop="12dp"
             android:visibility="gone"/>
 
+
+        <!-- 🟣 BOTÓN EDITAR (DUEÑO) -->
+        <Button
+            android:id="@+id/btnVender"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Editar producto"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
+
+
+        <!-- 🔴 BOTÓN ELIMINAR (DUEÑO) -->
         <Button
             android:id="@+id/btnEliminar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:text="Eliminar producto"
             android:textAllCaps="false"
             android:backgroundTint="@android:color/holo_red_dark"
-            android:textColor="@android:color/white"
+            android:textColor="#FFFFFF"
             android:layout_marginTop="8dp"
             android:visibility="gone"/>
 

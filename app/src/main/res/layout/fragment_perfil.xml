@@ -162,5 +162,24 @@
             android:visibility="gone"
             android:layout_marginTop="16dp"/>
 
+        <!-- 🔥 SECCIÓN DE OFERTAS RECIBIDAS -->
+        <TextView
+            android:id="@+id/txtOffersTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ofertas recibidas"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#000"
+            android:visibility="gone"
+            android:layout_marginTop="28dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerOffers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 </ScrollView>

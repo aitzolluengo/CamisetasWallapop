@@ -1,5 +1,7 @@
 package com.tzolas.camisetaswallapop.activities;
 
+import static android.content.Intent.getIntent;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
