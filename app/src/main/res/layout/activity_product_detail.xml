@@ -10,26 +10,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- ✅ Imagen -->
-        <ImageView
-            android:id="@+id/imgDetail"
+        <!--  🔥 CARRUSEL DE IMÁGENES (VINTED/WALLAPOP STYLE) -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPagerImages"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:scaleType="centerCrop"
             android:background="#EFEFEF"
-            android:clipToOutline="true"
+            android:clipToPadding="false"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- 🔥 Indicadores de puntos -->
+        <LinearLayout
+            android:id="@+id/indicatorLayout"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"/>
 
-        <!-- ✅ Título -->
+        <!--  🔥 Título -->
         <TextView
             android:id="@+id/txtTitleDetail"
             android:textSize="22sp"
             android:textColor="#000000"
             android:textStyle="bold"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
-        <!-- ✅ Precio -->
+        <!--  🔥 Precio -->
         <TextView
             android:id="@+id/txtPriceDetail"
             android:textSize="22sp"
@@ -39,14 +47,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <!-- ✅ Línea divisor -->
+        <!--  🔹 Línea divisor -->
         <View
             android:layout_marginTop="16dp"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#DDDDDD" />
 
-        <!-- ✅ Descripción -->
+        <!--  🔥 Descripción -->
         <TextView
             android:text="Descripción"
             android:textSize="15sp"
@@ -64,29 +72,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <!-- ✅ Línea divisor -->
+        <!--  🔹 Línea divisor -->
         <View
             android:layout_marginTop="20dp"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#DDDDDD" />
 
-        <!-- ✅ Sección extra dinámicos -->
+        <!-- 🔥 Contenedor dinámico de extras -->
         <LinearLayout
             android:id="@+id/containerExtra"
             android:orientation="vertical"
             android:layout_marginTop="20dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"/>
 
-        <!-- ✅ Línea divisor -->
+        <!--  🔹 Línea divisor -->
         <View
             android:layout_marginTop="20dp"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#DDDDDD" />
 
-        <!-- ✅ BLOQUE VENDEDOR (clic) -->
+        <!-- 🔥 BLOQUE DEL VENDEDOR -->
         <LinearLayout
             android:id="@+id/sellerBlock"
             android:orientation="horizontal"
@@ -135,7 +143,7 @@
 
         </LinearLayout>
 
-        <!-- ✅ Botón -->
+        <!-- 🔥 Botones -->
         <Button
             android:id="@+id/btnChat"
             android:text="Contactar vendedor"
@@ -146,14 +154,16 @@
             android:layout_marginTop="32dp"
             android:layout_width="match_parent"
             android:layout_height="48dp"/>
+
         <Button
             android:id="@+id/btnVender"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Vender"
+            android:text="Editar producto"
             android:textAllCaps="false"
             android:layout_marginTop="12dp"
-            android:visibility="gone" />
+            android:visibility="gone"/>
+
         <Button
             android:id="@+id/btnEliminar"
             android:layout_width="match_parent"

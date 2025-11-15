@@ -12,43 +12,64 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- IMAGE PICKER -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- 🔥 NUEVO: CARRUSEL DE FOTOS -->
+        <LinearLayout
+            android:id="@+id/layoutPhotoCarousel"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
-            app:cardCornerRadius="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackgroundBorderless">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/imagePreview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_add"
-                android:scaleType="centerCrop"
-                android:contentDescription="Seleccionar imagen"/>
-        </com.google.android.material.card.MaterialCardView>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerPhotos"
+                android:layout_width="0dp"
+                android:layout_height="110dp"
+                android:layout_weight="1"
+                android:orientation="horizontal" />
 
-        <!-- CATEGORY TITLE -->
+            <!-- BOTÓN AÑADIR FOTO -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnAddPhoto"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_marginStart="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                app:cardCornerRadius="12dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="25dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="#2E7D32"
+                    android:contentDescription="Añadir foto" />
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- 🔵 Eliminamos la imagen única, ya no se usa -->
+        <!-- (Si quieres la dejamos oculta, pero no es necesaria) -->
+
+
+
+
         <TextView
             android:text="¿Qué vas a vender?"
             android:textStyle="bold"
             android:textSize="18sp"
             android:textColor="#2E7D32"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <!-- CATEGORY SELECTION (CARDS) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="3">
 
-            <!-- CAMISETA -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCamiseta"
                 android:layout_width="0dp"
@@ -60,10 +81,10 @@
                 app:strokeWidth="2dp">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
                     <ImageView
                         android:layout_width="42dp"
@@ -78,9 +99,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- CROMO -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCromo"
                 android:layout_width="0dp"
@@ -92,10 +113,10 @@
                 app:strokeWidth="1dp">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
                     <ImageView
                         android:layout_width="40dp"
@@ -109,9 +130,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ENTRADA -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardEntrada"
                 android:layout_width="0dp"
@@ -123,10 +144,10 @@
                 app:strokeWidth="1dp">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
                     <ImageView
                         android:layout_width="40dp"
@@ -140,11 +161,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-        <!-- EXTRA FIELDS: CROMO -->
+
+
+
+        <!-- CROMO -->
         <LinearLayout
             android:id="@+id/layoutExtraCromo"
             android:layout_width="match_parent"
@@ -184,7 +209,7 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <!-- EXTRA FIELDS: CAMISETA -->
+        <!-- CAMISETA -->
         <LinearLayout
             android:id="@+id/layoutExtraCamiseta"
             android:layout_width="match_parent"
@@ -220,7 +245,7 @@
                 android:layout_marginTop="8dp"/>
         </LinearLayout>
 
-        <!-- EXTRA FIELDS: ENTRADA -->
+        <!-- ENTRADA -->
         <LinearLayout
             android:id="@+id/layoutExtraEntrada"
             android:layout_width="match_parent"
@@ -270,7 +295,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             app:cardCornerRadius="12dp"
-            app:strokeWidth="0dp"
             android:padding="16dp">
 
             <LinearLayout
@@ -317,7 +341,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- PUBLISH BUTTON -->
+        <!-- BOTÓN PUBLICAR -->
         <Button
             android:id="@+id/btnPublish"
             android:layout_width="match_parent"

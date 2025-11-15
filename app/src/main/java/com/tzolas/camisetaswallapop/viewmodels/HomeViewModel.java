@@ -27,32 +27,35 @@ public class HomeViewModel extends ViewModel {
         return products;
     }
 
+    // ------------------------------------------------------
+    // CARGAR PRODUCTOS + FAVORITOS
+    // ------------------------------------------------------
     private void loadAllProducts() {
 
-        // 1️⃣ Cargar favoritos primero si hay usuario logueado
         if (myUid != null) {
+            // 1️⃣ Cargar favoritos del usuario actual
             db.collection("users")
                     .document(myUid)
                     .collection("favorites")
                     .get()
-                    .addOnSuccessListener(favSnap -> {
+                    .addOnSuccessListener(snapshot -> {
 
                         Set<String> favoriteIds = new HashSet<>();
-                        favSnap.forEach(doc -> favoriteIds.add(doc.getId()));
+                        snapshot.forEach(doc -> favoriteIds.add(doc.getId()));
 
                         loadProductsWithFavorites(favoriteIds);
                     })
-                    .addOnFailureListener(e -> {
-                        // Si falla favoritos → cargar productos sin favoritos
-                        loadProductsWithFavorites(new HashSet<>());
-                    });
+                    .addOnFailureListener(e -> loadProductsWithFavorites(new HashSet<>()));
 
         } else {
-            // No logueado → cargar sin favoritos
+            // Usuario NO logueado
             loadProductsWithFavorites(new HashSet<>());
         }
     }
 
+    // ------------------------------------------------------
+    // CARGA COMPLETA DE PRODUCTOS + MARCAR FAVORITOS
+    // ------------------------------------------------------
     private void loadProductsWithFavorites(Set<String> favoriteIds) {
 
         db.collection("products")
@@ -61,29 +64,45 @@ public class HomeViewModel extends ViewModel {
 
                     List<Product> list = new ArrayList<>();
 
-                    query.getDocuments().forEach(doc -> {
+                    query.forEach(doc -> {
 
                         Product p = doc.toObject(Product.class);
                         if (p == null) return;
 
-                        // Asegurar ID
+                        // Siempre asegurar ID
                         p.setId(doc.getId());
 
-                        // Marcar favorito
+                        // ⭐ Compatibilidad con productos antiguos (imageUrl único)
+                        if ((p.getImageUrls() == null || p.getImageUrls().isEmpty())
+                                && doc.contains("imageUrl")) {
+
+                            String oldUrl = doc.getString("imageUrl");
+                            if (oldUrl != null && !oldUrl.trim().isEmpty()) {
+                                List<String> convert = new ArrayList<>();
+                                convert.add(oldUrl);
+                                p.setImageUrls(convert);
+                            }
+                        }
+
+                        // Evitar crashes por null en lista
+                        if (p.getImageUrls() == null) {
+                            p.setImageUrls(new ArrayList<>());
+                        }
+
+                        // ❤️ Marcar como favorito
                         p.setFavorite(favoriteIds.contains(p.getId()));
 
-                        // Opcional: NO mostrar mis propios productos
+                        // Opcional: Ocultar mis productos del Home
                         if (myUid != null && p.getUserId() != null && p.getUserId().equals(myUid)) {
-                            return; // saltar mis productos
+                            return;
                         }
 
                         list.add(p);
                     });
 
                     products.setValue(list);
+
                 })
-                .addOnFailureListener(e -> {
-                    products.setValue(new ArrayList<>());
-                });
+                .addOnFailureListener(e -> products.setValue(new ArrayList<>()));
     }
 }

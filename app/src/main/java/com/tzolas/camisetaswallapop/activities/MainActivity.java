@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
     }
 
     // Este método centraliza la lógica de navegación según el Intent (goTo)

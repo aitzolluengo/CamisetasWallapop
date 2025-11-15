@@ -1,6 +1,8 @@
 package com.tzolas.camisetaswallapop.utils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -34,22 +36,22 @@ public class CloudinaryUploader {
             InputStream inputStream = context.getContentResolver().openInputStream(uri);
             if (inputStream == null) return null;
 
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            int read;
-            byte[] data = new byte[4096];
+            // 👇 Decodifica como Bitmap
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            if (bitmap == null) return null;
 
-            while ((read = inputStream.read(data)) != -1) {
-                buffer.write(data, 0, read);
-            }
+            // 👇 COMPRESIÓN 85%
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos);
 
-            byte[] imageBytes = buffer.toByteArray();
+            byte[] imageBytes = baos.toByteArray();
 
             RequestBody body = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart(
                             "file",
                             "image.jpg",
-                            RequestBody.create(imageBytes, MediaType.parse("image/*"))
+                            RequestBody.create(imageBytes, MediaType.parse("image/jpeg"))
                     )
                     .addFormDataPart("upload_preset", UPLOAD_PRESET)
                     .build();
@@ -62,7 +64,7 @@ public class CloudinaryUploader {
             Response response = client.newCall(request).execute();
             String raw = response.body().string();
 
-            System.out.println("🌐 CLOUDINARY RESPONSE → " + raw);
+            System.out.println("🌐 CLOUDINARY → " + raw);
 
             if (!response.isSuccessful()) return null;
 

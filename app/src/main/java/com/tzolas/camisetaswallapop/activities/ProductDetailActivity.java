@@ -13,14 +13,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
 
-import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.tzolas.camisetaswallapop.R;
-import com.tzolas.camisetaswallapop.models.Chat;
+import com.tzolas.camisetaswallapop.adapters.DetailImageAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
 import com.tzolas.camisetaswallapop.repositories.ChatRepository;
 import com.tzolas.camisetaswallapop.repositories.UserRepository;
@@ -28,15 +27,19 @@ import com.tzolas.camisetaswallapop.repositories.UserRepository;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.HashMap;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
-    private ImageView img, imgSeller;
+    private ViewPager2 viewPagerImages;
+    private LinearLayout indicatorLayout;
+
     private TextView title, price, description, txtSellerName;
+    private View sellerBlock;
     private Button btnChat, btnVender, btnEliminar;
+
     private LinearLayout containerExtra;
 
     private FirebaseFirestore db;
@@ -48,27 +51,35 @@ public class ProductDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_product_detail);
 
+        // ViewPager
+        viewPagerImages = findViewById(R.id.viewPagerImages);
+        indicatorLayout = findViewById(R.id.indicatorLayout);
+
         // UI
-        img = findViewById(R.id.imgDetail);
         title = findViewById(R.id.txtTitleDetail);
         price = findViewById(R.id.txtPriceDetail);
         description = findViewById(R.id.txtDescriptionDetail);
-        containerExtra = findViewById(R.id.containerExtra);
-        btnChat = findViewById(R.id.btnChat);
-        imgSeller = findViewById(R.id.imgSeller);
         txtSellerName = findViewById(R.id.txtSellerName);
+
+        sellerBlock = findViewById(R.id.sellerBlock);
+
+        btnChat = findViewById(R.id.btnChat);
         btnVender = findViewById(R.id.btnVender);
         btnEliminar = findViewById(R.id.btnEliminar);
+
+        containerExtra = findViewById(R.id.containerExtra);
 
         db = FirebaseFirestore.getInstance();
 
         productId = getIntent().getStringExtra("productId");
-        if (productId != null && !productId.trim().isEmpty()) {
-            loadProduct(productId);
-        } else {
+
+        if (productId == null || productId.isEmpty()) {
             Toast.makeText(this, "Producto no encontrado", Toast.LENGTH_SHORT).show();
             finish();
+            return;
         }
+
+        loadProduct(productId);
     }
 
     /** =========================================================
@@ -80,59 +91,107 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(doc -> {
                     Product p = doc.toObject(Product.class);
-                    if (p == null) return;
 
-                    if (p.getId() == null || p.getId().isEmpty()) {
-                        p.setId(doc.getId());
+                    if (p == null) {
+                        Toast.makeText(this, "Error al cargar producto", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
                     }
 
+                    if (p.getId() == null) p.setId(doc.getId());
                     currentProduct = p;
 
                     title.setText(p.getTitle());
                     price.setText(String.format(Locale.getDefault(), "%.2f€", p.getPrice()));
                     description.setText(p.getDescription());
 
-                    Glide.with(this)
-                            .load(p.getImageUrl())
-                            .placeholder(R.drawable.bg_image_placeholder)
-                            .into(img);
-
-                    Map<String, Object> extra = p.getExtra();
-                    if (extra != null && !extra.isEmpty()) fillExtraData(extra);
-
+                    setupImageSlider(p.getImageUrls());
+                    fillExtraData(p.getExtra());
                     loadSellerInfo(p.getUserId());
-
-                    // Lógica de dueño / comprador
                     setupOwnerOrBuyerUI();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error cargando producto", Toast.LENGTH_SHORT).show()
-                );
+                });
     }
 
-    /** Decide si mostrar chat o editar/eliminar según si es tuyo */
+    /** =========================================================
+     * MULTI-FOTO
+     * ========================================================= */
+    private void setupImageSlider(java.util.List<String> urls) {
+
+        if (urls == null || urls.isEmpty()) return;
+
+        DetailImageAdapter adapter = new DetailImageAdapter(this, urls);
+        viewPagerImages.setAdapter(adapter);
+
+        setupIndicators(urls.size());
+        setCurrentIndicator(0);
+
+        viewPagerImages.registerOnPageChangeCallback(
+                new ViewPager2.OnPageChangeCallback() {
+                    @Override
+                    public void onPageSelected(int position) {
+                        setCurrentIndicator(position);
+                    }
+                }
+        );
+    }
+
+    private void setupIndicators(int count) {
+        indicatorLayout.removeAllViews();
+
+        for (int i = 0; i < count; i++) {
+
+            ImageView dot = new ImageView(this);
+            dot.setImageResource(R.drawable.indicador_inactive);
+
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+
+            params.setMargins(8, 0, 8, 0);
+
+            indicatorLayout.addView(dot, params);
+        }
+    }
+
+    private void setCurrentIndicator(int index) {
+        int childCount = indicatorLayout.getChildCount();
+
+        for (int i = 0; i < childCount; i++) {
+            ImageView dot = (ImageView) indicatorLayout.getChildAt(i);
+            dot.setImageResource(i == index
+                    ? R.drawable.indicador_active
+                    : R.drawable.indicador_inactive);
+        }
+    }
+
+    /** =========================================================
+     * PROPIETARIO vs COMPRADOR
+     * ========================================================= */
     private void setupOwnerOrBuyerUI() {
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         String myUid = (user != null) ? user.getUid() : null;
 
         boolean isOwner = myUid != null && currentProduct.getUserId().equals(myUid);
 
         if (isOwner) {
-            // Soy el dueño → NO chatear conmigo mismo, SÍ editar/eliminar
+
             btnChat.setVisibility(View.GONE);
-            findViewById(R.id.sellerBlock).setVisibility(View.GONE);
+            sellerBlock.setVisibility(View.GONE);
 
             btnVender.setVisibility(View.VISIBLE);
+            btnEliminar.setVisibility(View.VISIBLE);
+
             btnVender.setText("Editar producto");
             btnVender.setOnClickListener(v -> abrirDialogoEditarProducto());
-
-            btnEliminar.setVisibility(View.VISIBLE);
             btnEliminar.setOnClickListener(v -> confirmarEliminarProducto());
 
         } else {
-            // No soy el dueño → ver vendedor y chatear
+
             btnChat.setVisibility(View.VISIBLE);
-            findViewById(R.id.sellerBlock).setVisibility(View.VISIBLE);
+            sellerBlock.setVisibility(View.VISIBLE);
 
             btnVender.setVisibility(View.GONE);
             btnEliminar.setVisibility(View.GONE);
@@ -142,22 +201,24 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * Renderizar EXTRAS
+     * Información extra dinámica
      * ========================================================= */
     private void fillExtraData(Map<String, Object> extra) {
+        if (extra == null) return;
+
         containerExtra.removeAllViews();
 
         for (String key : extra.keySet()) {
             Object value = extra.get(key);
 
+            // Si es fecha → formatear
             if (value instanceof Long && key.toLowerCase().contains("fecha")) {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                 value = sdf.format(new Date((Long) value));
             }
 
-            String prettyKey = key.substring(0, 1).toUpperCase() + key.substring(1);
             TextView tv = new TextView(this);
-            tv.setText("• " + prettyKey + ": " + value);
+            tv.setText("• " + key + ": " + value);
             tv.setTextSize(15);
             tv.setTextColor(0xFF444444);
             containerExtra.addView(tv);
@@ -165,77 +226,55 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * Cargar info del vendedor
+     * Info del vendedor
      * ========================================================= */
     private void loadSellerInfo(String sellerId) {
-        if (sellerId == null || sellerId.trim().isEmpty()) return;
-
         new UserRepository().getUserById(sellerId)
                 .addOnSuccessListener(doc -> {
-                    if (doc == null || !doc.exists()) {
-                        txtSellerName.setText("Vendedor");
-                        imgSeller.setImageResource(R.drawable.ic_user_placeholder);
-                        return;
-                    }
 
                     String name = doc.getString("name");
-                    String photoUrl = doc.getString("photo");
+                    txtSellerName.setText(name != null ? name : "Vendedor");
 
-                    txtSellerName.setText((name != null && !name.trim().isEmpty()) ? name : "Vendedor");
-
-                    if (photoUrl != null && !photoUrl.trim().isEmpty()) {
-                        Glide.with(this)
-                                .load(photoUrl)
-                                .placeholder(R.drawable.ic_user_placeholder)
-                                .circleCrop()
-                                .into(imgSeller);
-                    } else {
-                        imgSeller.setImageResource(R.drawable.ic_user_placeholder);
-                    }
-
-                    findViewById(R.id.sellerBlock).setOnClickListener(v -> {
-                        Intent i = new Intent(ProductDetailActivity.this, SellerProfileActivity.class);
+                    sellerBlock.setOnClickListener(v -> {
+                        Intent i = new Intent(this, SellerProfileActivity.class);
                         i.putExtra("sellerId", sellerId);
                         startActivity(i);
                     });
-                })
-                .addOnFailureListener(e -> {
-                    txtSellerName.setText("Vendedor");
-                    imgSeller.setImageResource(R.drawable.ic_user_placeholder);
                 });
     }
 
     /** =========================================================
-     * Crear/abrir chat
+     * Chat
      * ========================================================= */
     private void startChat(Product p) {
+
         String buyerId = FirebaseAuth.getInstance().getUid();
         String sellerId = p.getUserId();
         String pid = p.getId();
-        if (buyerId == null) return;
 
         ChatRepository repo = new ChatRepository();
 
         repo.findChat(buyerId, sellerId, pid)
-                .addOnSuccessListener(query -> {
-                    if (!query.isEmpty()) {
-                        String chatId = query.getDocuments().get(0).getId();
-                        openChat(chatId, sellerId, pid);
+                .addOnSuccessListener(q -> {
+
+                    if (!q.isEmpty()) {
+                        openChat(q.getDocuments().get(0).getId(), sellerId, pid);
                         return;
                     }
 
                     String chatId = repo.generateId();
 
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("id", chatId);
+                    data.put("user1", buyerId);
+                    data.put("user2", sellerId);
+                    data.put("productId", pid);
+                    data.put("createdAt", System.currentTimeMillis());
+                    data.put("participants", Arrays.asList(buyerId, sellerId));
+
                     db.collection("chats")
                             .document(chatId)
-                            .set(new HashMap<String, Object>() {{
-                                put("id", chatId);
-                                put("user1", buyerId);
-                                put("user2", sellerId);
-                                put("productId", pid);
-                                put("createdAt", System.currentTimeMillis());
-                                put("participants", Arrays.asList(buyerId, sellerId));
-                            }})
+                            .set(data)
                             .addOnSuccessListener(v -> openChat(chatId, sellerId, pid));
                 });
     }
@@ -249,9 +288,10 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * EDITAR PRODUCTO (solo dueño)
+     * Editar producto
      * ========================================================= */
     private void abrirDialogoEditarProducto() {
+
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_product, null);
 
         EditText edtTitle = view.findViewById(R.id.edtEditTitle);
@@ -265,49 +305,43 @@ public class ProductDetailActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Editar producto")
                 .setView(view)
-                .setPositiveButton("Guardar", (d, w) -> {
-                    String t = edtTitle.getText().toString().trim();
-                    String pr = edtPrice.getText().toString().trim();
-                    String desc = edtDesc.getText().toString().trim();
-                    guardarEdicionProducto(t, pr, desc);
-                })
+                .setPositiveButton("Guardar", (d, w) -> guardarEdicionProducto(
+                        edtTitle.getText().toString(),
+                        edtPrice.getText().toString(),
+                        edtDesc.getText().toString()
+                ))
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
     private void guardarEdicionProducto(String newTitle, String newPrice, String newDesc) {
-        if (currentProduct == null) return;
 
         double priceValue;
         try {
             priceValue = Double.parseDouble(newPrice);
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             Toast.makeText(this, "Precio inválido", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("title", newTitle);
-        updates.put("price", priceValue);
-        updates.put("description", newDesc);
+        Map<String, Object> up = new HashMap<>();
+        up.put("title", newTitle);
+        up.put("price", priceValue);
+        up.put("description", newDesc);
 
-        FirebaseFirestore.getInstance()
-                .collection("products")
+        db.collection("products")
                 .document(currentProduct.getId())
-                .update(updates)
+                .update(up)
                 .addOnSuccessListener(v -> {
-                    Toast.makeText(this, "Producto actualizado", Toast.LENGTH_SHORT).show();
                     title.setText(newTitle);
-                    description.setText(newDesc);
                     price.setText(String.format(Locale.getDefault(), "%.2f€", priceValue));
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error al actualizar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+                    description.setText(newDesc);
+                    Toast.makeText(this, "Producto actualizado", Toast.LENGTH_SHORT).show();
+                });
     }
 
     /** =========================================================
-     * ELIMINAR PRODUCTO (solo dueño)
+     * Eliminar producto
      * ========================================================= */
     private void confirmarEliminarProducto() {
         new AlertDialog.Builder(this)
@@ -319,18 +353,12 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void eliminarProducto() {
-        if (currentProduct == null) return;
-
-        FirebaseFirestore.getInstance()
-                .collection("products")
+        db.collection("products")
                 .document(currentProduct.getId())
                 .delete()
                 .addOnSuccessListener(v -> {
                     Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show();
                     finish();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+                });
     }
 }

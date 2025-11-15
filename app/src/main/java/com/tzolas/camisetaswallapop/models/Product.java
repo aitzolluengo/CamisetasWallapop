@@ -1,9 +1,12 @@
 package com.tzolas.camisetaswallapop.models;
 
 import androidx.annotation.Keep;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-@Keep // evita que R8/ProGuard lo elimine
+@Keep
 public class Product {
 
     private String id;
@@ -11,55 +14,84 @@ public class Product {
     private String category;
     private double price;
     private String description;
-    private String imageUrl;
+
+    // 🔥 Múltiples fotos
+    private List<String> imageUrls = new ArrayList<>();
+
     private String userId;
     private long timestamp;
     private Map<String, Object> extra;
 
-    // Campos de venta (si los añadiste)
+    // Campos de venta
     private boolean sold;
     private String buyerId;
     private String orderId;
     private long soldAt;
+
     private boolean favourite;
 
-    // 🔴 IMPORTANTE: constructor vacío PÚBLICO
+    // 🔴 NECESARIO para Firestore
     public Product() { }
 
-    // Constructor “corto” (inicializa defaults de venta)
-    public Product(String id, String title, String category, double price,
-                   String description, String imageUrl, String userId, long timestamp,
-                   Map<String, Object> extra) {
+    // Constructor principal para creación de productos
+    public Product(
+            String id,
+            String title,
+            String category,
+            double price,
+            String description,
+            String userId,
+            long timestamp,
+            Map<String, Object> extra
+    ) {
         this.id = id;
         this.title = title;
         this.category = category;
         this.price = price;
         this.description = description;
-        this.imageUrl = imageUrl;
         this.userId = userId;
         this.timestamp = timestamp;
         this.extra = extra;
 
-        // defaults para venta
         this.sold = false;
         this.buyerId = null;
         this.orderId = null;
         this.soldAt = 0L;
+        this.favourite = false;
+
+        // Asegurar lista inicial
+        this.imageUrls = new ArrayList<>();
     }
 
-    // (opcional) Constructor extendido con campos de venta
-    public Product(String id, String title, String category, double price,
-                   String description, String imageUrl, String userId, long timestamp,
-                   Map<String, Object> extra,
-                   boolean sold, String buyerId, String orderId, long soldAt) {
-        this(id, title, category, price, description, imageUrl, userId, timestamp, extra);
+    // Constructor extendido (opcional para futuro)
+    public Product(
+            String id,
+            String title,
+            String category,
+            double price,
+            String description,
+            String userId,
+            long timestamp,
+            Map<String, Object> extra,
+            boolean sold,
+            String buyerId,
+            String orderId,
+            long soldAt
+    ) {
+        this(id, title, category, price, description, userId, timestamp, extra);
         this.sold = sold;
         this.buyerId = buyerId;
         this.orderId = orderId;
         this.soldAt = soldAt;
     }
 
-    // Getters y setters PÚBLICOS para TODOS los campos (Firestore los necesita)
+    public Product(String productId, String title, String selectedCategory, double price, String description, String s, String uid, long timestamp, Map<String, Object> extra) {
+    }
+
+    // ---------------------------
+    //     GETTERS / SETTERS
+    // ---------------------------
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -75,8 +107,14 @@ public class Product {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) {
+        if (imageUrls == null) {
+            this.imageUrls = new ArrayList<>();
+        } else {
+            this.imageUrls = imageUrls;
+        }
+    }
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -100,5 +138,5 @@ public class Product {
     public void setSoldAt(long soldAt) { this.soldAt = soldAt; }
 
     public boolean isFavorite() { return favourite; }
-    public void setFavorite(boolean favorite) { this.favourite = favorite; }
+    public void setFavorite(boolean favourite) { this.favourite = favourite; }
 }

@@ -79,29 +79,35 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         h.title.setText(p.getTitle());
         h.price.setText(p.getPrice() + "€");
 
-        Glide.with(h.itemView.getContext())
-                .load(p.getImageUrl())
-                .placeholder(R.drawable.bg_image_placeholder)
-                .into(h.image);
+        // -------------------------
+        //   🔥 MULTI FOTO FIX
+        // -------------------------
+        List<String> urls = p.getImageUrls();
 
-        // ❤️ FAVORITO: icono según estado
+        if (urls != null && !urls.isEmpty()) {
+            Glide.with(h.itemView.getContext())
+                    .load(urls.get(0))  // Primera imagen
+                    .placeholder(R.drawable.bg_image_placeholder)
+                    .into(h.image);
+        } else {
+            h.image.setImageResource(R.drawable.bg_image_placeholder);
+        }
+
+        // ❤️ FAVORITO
         h.btnFavorite.setImageResource(
                 p.isFavorite()
                         ? R.drawable.ic_heart_filled
                         : R.drawable.ic_heart_empty
         );
 
-        // ❤️ CLICK FAVORITO + animación
         h.btnFavorite.setOnClickListener(v -> toggleFavorite(p, h));
 
-        // CLICK ITEM (si no está vendido)
         if (!p.isSold()) {
             h.itemView.setOnClickListener(v -> {
                 if (listener != null) listener.onItemClick(p);
             });
         }
 
-        // BADGE VENDIDO
         if (h.badgeSold != null) {
             h.badgeSold.setVisibility(p.isSold() ? View.VISIBLE : View.GONE);
             h.itemView.setAlpha(p.isSold() ? 0.6f : 1f);
