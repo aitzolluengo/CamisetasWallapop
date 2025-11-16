@@ -39,7 +39,7 @@ public class OffersAdapter extends RecyclerView.Adapter<OffersAdapter.ViewHolder
         Map<String, Object> offer = offers.get(position);
 
         holder.title.setText((String) offer.get("productTitle"));
-        holder.price.setText("Oferta: " + offer.get("price") + "€");
+        holder.price.setText("Oferta: " + offer.get("price") + "pts");
         holder.buyer.setText("Comprador: " + offer.get("buyerEmail"));
 
         holder.itemView.setOnClickListener(v -> listener.onOfferClick(offer));

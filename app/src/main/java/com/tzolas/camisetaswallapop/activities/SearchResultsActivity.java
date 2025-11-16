@@ -139,7 +139,7 @@ public class SearchResultsActivity extends AppCompatActivity {
 
         // Precio máximo
         EditText txtMaxPrice = new EditText(this);
-        txtMaxPrice.setHint("Precio máximo (€)");
+        txtMaxPrice.setHint("Puntos máximos");
         txtMaxPrice.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         layout.addView(txtMaxPrice);
 

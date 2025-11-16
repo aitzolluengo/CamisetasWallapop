@@ -99,7 +99,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     currentProduct = p;
 
                     title.setText(p.getTitle());
-                    price.setText(String.format(Locale.getDefault(), "%.2f€", p.getPrice()));
+                    price.setText(String.format(Locale.getDefault(), "%.0f puntos", p.getPrice()));
                     description.setText(p.getDescription());
 
                     setupImageSlider(p.getImageUrls());
@@ -440,7 +440,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .update(up)
                 .addOnSuccessListener(v -> {
                     title.setText(newTitle);
-                    price.setText(String.format(Locale.getDefault(), "%.2f€", priceValue));
+                    price.setText(String.format(Locale.getDefault(), "%.0f puntos", priceValue));
                     description.setText(newDesc);
                 });
     }

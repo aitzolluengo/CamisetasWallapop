@@ -77,7 +77,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         Product p = products.get(position);
 
         h.title.setText(p.getTitle());
-        h.price.setText(p.getPrice() + "€");
+        h.price.setText(p.getPrice() + "pts");
 
         // -------------------------
         //   🔥 MULTI FOTO FIX
