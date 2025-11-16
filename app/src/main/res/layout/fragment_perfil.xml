@@ -28,14 +28,36 @@
                 android:background="@drawable/circle_background"
                 android:padding="4dp"/>
 
-            <TextView
-                android:id="@+id/tvName"
+            <!-- NOMBRE + PUNTOS (ESTILO PRO) -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Usuario"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_marginTop="12dp"/>
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/tvName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Usuario"
+                    android:textStyle="bold"
+                    android:textSize="20sp" />
+
+                <!-- CHIP DE PUNTOS -->
+                <TextView
+                    android:id="@+id/tvPoints"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 pts"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_points_chip"
+                    android:textColor="@android:color/white"/>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvEmail"
@@ -44,7 +66,7 @@
                 android:text="email@mail.com"
                 android:textSize="14sp"
                 android:textColor="#777"
-                android:layout_marginTop="2dp"/>
+                android:layout_marginTop="4dp"/>
 
             <!-- RATING -->
             <LinearLayout
@@ -102,7 +124,6 @@
                     android:paddingHorizontal="24dp"
                     android:gravity="center"/>
             </LinearLayout>
-
         </LinearLayout>
 
         <!-- TÍTULO -->
@@ -180,6 +201,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:visibility="gone"/>
-
     </LinearLayout>
+
 </ScrollView>

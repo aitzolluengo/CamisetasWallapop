@@ -48,9 +48,11 @@ public class ProductRepository {
      * ===================================================== */
     public Task<QuerySnapshot> getProducts() {
         return db.collection("products")
+                .whereEqualTo("sold", false)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get();
     }
+
 
     /** =====================================================
      *  OBTENER PRODUCTOS RECIENTES (FEED)

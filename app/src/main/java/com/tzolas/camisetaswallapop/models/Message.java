@@ -9,6 +9,9 @@ public class Message {
     private boolean delivered;
     private boolean read;
 
+    private String type;       // text, offer, offerAccepted, offerRejected, system
+    private int offerPrice;    // precio ofertado si aplica
+
 
     public Message() {}
 
@@ -34,4 +37,10 @@ public class Message {
     public boolean isRead() { return read; }
     public void setDelivered(boolean delivered) { this.delivered = delivered; }
     public void setRead(boolean read) { this.read = read; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+
+    public int getOfferPrice() { return offerPrice; }
+    public void setOfferPrice(int offerPrice) { this.offerPrice = offerPrice; }
+
 }

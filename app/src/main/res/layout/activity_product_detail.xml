@@ -175,6 +175,18 @@
             android:textColor="#FFFFFF"
             android:layout_marginTop="32dp" />
 
+        <Button
+            android:id="@+id/btnComprar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Comprar"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#7A3BFF"
+            android:textColor="@android:color/white"
+            android:padding="12dp"/>
+
+
 
         <!-- 🟢 BOTÓN ENVIAR OFERTA (COMPRADOR) -->
         <Button

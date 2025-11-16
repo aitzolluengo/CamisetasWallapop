@@ -151,16 +151,41 @@ public class PerfilFragment extends Fragment {
     /** ================================
      *   DATOS DEL USUARIO
      * ================================ */
-    private void mostrarDatosUsuario(FirebaseUser user) {
-        tvName.setText(user.getDisplayName() != null ? user.getDisplayName() : "Sin nombre");
-        tvEmail.setText(user.getEmail());
+    private void mostrarDatosUsuario(FirebaseUser firebaseUser) {
+        tvName.setText(firebaseUser.getDisplayName() != null ? firebaseUser.getDisplayName() : "Sin nombre");
+        tvEmail.setText(firebaseUser.getEmail());
 
-        Uri photo = user.getPhotoUrl();
+        Uri photo = firebaseUser.getPhotoUrl();
         Glide.with(this)
                 .load(photo != null ? photo : R.drawable.ic_user_placeholder)
                 .circleCrop()
                 .into(ivProfilePhoto);
+
+        // ============================
+        // 🔥 Cargar puntos en tiempo real
+        // ============================
+
+        db.collection("users")
+                .document(firebaseUser.getUid())
+                .addSnapshotListener((doc, error) -> {
+
+                    if (error != null || doc == null || !doc.exists()) return;
+
+                    Long points = doc.getLong("points");
+                    Long spentPoints = doc.getLong("spentPoints");
+
+                    TextView tvPoints = getView().findViewById(R.id.tvPoints);
+
+                    if (tvPoints != null) {
+                        tvPoints.setText((points != null ? points : 0) + " pts");
+                    }
+
+                    // Si quieres mostrar también spentPoints, activa esto:
+                    // TextView tvSpent = getView().findViewById(R.id.tvSpentPoints);
+                    // if (tvSpent != null) tvSpent.setText("Gastados: " + (spentPoints != null ? spentPoints : 0));
+                });
     }
+
 
     /** ================================
      * 🔥 RATING EN TIEMPO REAL

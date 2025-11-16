@@ -8,6 +8,9 @@ public class User {
     private Long createdAt;  // opcional para lecturas simples
     private double ratingSum;
     private long ratingCount;
+    private int points;      // puntos disponibles
+    private int spentPoints; // opcional, estadísticas
+
 
     public User() {}
 
@@ -40,4 +43,10 @@ public class User {
     public double getAvgRating() {
         return ratingCount > 0 ? ratingSum / ratingCount : 0.0;
     }
+    public int getPoints() { return points; }
+    public void setPoints(int points) { this.points = points; }
+
+    public int getSpentPoints() { return spentPoints; }
+    public void setSpentPoints(int spentPoints) { this.spentPoints = spentPoints; }
+
 }

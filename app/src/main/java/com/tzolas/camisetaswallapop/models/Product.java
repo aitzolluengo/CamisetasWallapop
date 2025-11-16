@@ -3,6 +3,7 @@ package com.tzolas.camisetaswallapop.models;
 import androidx.annotation.Keep;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public class Product {
     private double price;
     private String description;
 
-    // 🔥 Múltiples fotos
+    // 🔥 Soporta múltiples fotos
     private List<String> imageUrls = new ArrayList<>();
 
     private String userId;
@@ -30,20 +31,18 @@ public class Product {
 
     private boolean favourite;
 
-    // 🔴 NECESARIO para Firestore
-    public Product() { }
+    private String shippingAddress;
+    private String postalCode;
+    private String phone;
 
-    // Constructor principal para creación de productos
-    public Product(
-            String id,
-            String title,
-            String category,
-            double price,
-            String description,
-            String userId,
-            long timestamp,
-            Map<String, Object> extra
-    ) {
+    // 🔴 Firestore exige constructor vacío
+    public Product() {}
+
+    // Constructor principal
+    public Product(String id, String title, String category, double price,
+                   String description, String userId, long timestamp,
+                   Map<String, Object> extra) {
+
         this.id = id;
         this.title = title;
         this.category = category;
@@ -58,39 +57,12 @@ public class Product {
         this.orderId = null;
         this.soldAt = 0L;
         this.favourite = false;
-
-        // Asegurar lista inicial
         this.imageUrls = new ArrayList<>();
     }
 
-    // Constructor extendido (opcional para futuro)
-    public Product(
-            String id,
-            String title,
-            String category,
-            double price,
-            String description,
-            String userId,
-            long timestamp,
-            Map<String, Object> extra,
-            boolean sold,
-            String buyerId,
-            String orderId,
-            long soldAt
-    ) {
-        this(id, title, category, price, description, userId, timestamp, extra);
-        this.sold = sold;
-        this.buyerId = buyerId;
-        this.orderId = orderId;
-        this.soldAt = soldAt;
-    }
-
-    public Product(String productId, String title, String selectedCategory, double price, String description, String s, String uid, long timestamp, Map<String, Object> extra) {
-    }
-
-    // ---------------------------
-    //     GETTERS / SETTERS
-    // ---------------------------
+    // ------------------------------------
+    //           GETTERS / SETTERS
+    // ------------------------------------
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -108,11 +80,16 @@ public class Product {
     public void setDescription(String description) { this.description = description; }
 
     public List<String> getImageUrls() { return imageUrls; }
+
     public void setImageUrls(List<String> imageUrls) {
-        if (imageUrls == null) {
-            this.imageUrls = new ArrayList<>();
-        } else {
-            this.imageUrls = imageUrls;
+        this.imageUrls = (imageUrls == null) ? new ArrayList<>() : imageUrls;
+    }
+
+    // 🔥 FIX: Firestore enviaba "imageUrl"
+    // Este setter convierte imageUrl -> imageUrls automáticamente
+    public void setImageUrl(String url) {
+        if (url != null && !url.isEmpty()) {
+            this.imageUrls = Arrays.asList(url);
         }
     }
 
@@ -139,4 +116,13 @@ public class Product {
 
     public boolean isFavorite() { return favourite; }
     public void setFavorite(boolean favourite) { this.favourite = favourite; }
+
+    public String getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
+
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 }
