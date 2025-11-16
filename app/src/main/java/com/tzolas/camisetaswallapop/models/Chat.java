@@ -1,5 +1,8 @@
 package com.tzolas.camisetaswallapop.models;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Chat {
 
     private String id;
@@ -8,6 +11,7 @@ public class Chat {
     private String productId;
     private long createdAt;
 
+    private List<String> participants;
     public Chat() {}
 
     public Chat(String id, String user1, String user2, String productId, long createdAt) {
@@ -16,6 +20,7 @@ public class Chat {
         this.user2 = user2;
         this.productId = productId;
         this.createdAt = createdAt;
+        this.participants = Arrays.asList(user1, user2);
     }
 
     public String getId() { return id; }
@@ -29,4 +34,6 @@ public class Chat {
     public void setUser2(String user2) { this.user2 = user2; }
     public void setProductId(String productId) { this.productId = productId; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+    public List<String> getParticipants() { return participants; }
+    public void setParticipants(List<String> participants) { this.participants = participants; }
 }

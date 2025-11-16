@@ -1,6 +1,7 @@
 package com.tzolas.camisetaswallapop.repositories;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Transaction;
@@ -71,26 +72,47 @@ public class OrderRepository {
     /**
      * Enviar oferta (crea documento en /products/{productId}/offers/{offerId})
      */
-    public Task<Void> sendOffer(String chatId, String buyerId, String sellerId, int price) {
+    public Task<Void> sendOffer(String productId, String chatId, String buyerId, int price) {
 
-        String offerId = UUID.randomUUID().toString();
+        String offerId = buyerId; // 1 oferta por comprador
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("offerId", offerId);
-        data.put("chatId", chatId);
-        data.put("buyerId", buyerId);
-        data.put("sellerId", sellerId);
-        data.put("price", price);
-        data.put("status", "pending");
-        data.put("timestamp", System.currentTimeMillis());
+        // guardar oferta dentro de products
+        Map<String, Object> offer = new HashMap<>();
+        offer.put("buyerId", buyerId);
+        offer.put("price", price);
+        offer.put("timestamp", System.currentTimeMillis());
+        offer.put("status", "pending");
 
-        return db.collection("chats")
-                .document(chatId)
+        Task<Void> t1 = db.collection("products")
+                .document(productId)
                 .collection("offers")
                 .document(offerId)
-                .set(data);
-    }
+                .set(offer);
 
+        // ===== MENSAJE DE OFERTA EN EL CHAT =====
+        String msgId = UUID.randomUUID().toString();
+
+        Map<String, Object> msg = new HashMap<>();
+        msg.put("id", msgId);
+        msg.put("senderId", buyerId);
+        msg.put("text", "Oferta de " + price + "€"); // texto visible
+        msg.put("timestamp", System.currentTimeMillis());
+        msg.put("delivered", false);
+        msg.put("read", false);
+
+        // CAMPOS IMPORTANTES
+        msg.put("type", "offer");
+        msg.put("offerPrice", price);
+        msg.put("status", "pending");
+
+        Task<Void> t2 = db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document(msgId)
+                .set(msg);
+
+        return Tasks.whenAll(t1, t2);
+    }
     /**
      * Aceptar oferta: marca oferta accepted y marca producto como vendido
      * Nota: NO modificamos puntos aquí porque la transferencia de puntos puede hacerse

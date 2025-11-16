@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:padding="6dp">
 
+    <!-- BURBUJA DEL MENSAJE -->
     <TextView
         android:id="@+id/txtMessageLeft"
         android:layout_width="wrap_content"
@@ -15,6 +16,42 @@
         android:textSize="15sp"
         android:maxWidth="300dp" />
 
+    <!-- BOTONES DE OFERTA -->
+    <LinearLayout
+        android:id="@+id/layoutOfferButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+
+        <Button
+            android:id="@+id/btnAcceptOffer"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Aceptar"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnRejectOffer"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Rechazar"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:layout_marginStart="8dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:backgroundTint="#F44336"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+    <!-- HORA -->
     <TextView
         android:id="@+id/txtTimeLeft"
         android:layout_width="wrap_content"
@@ -24,4 +61,5 @@
         android:layout_marginTop="2dp"
         android:layout_marginStart="8dp"
         android:gravity="start" />
+
 </LinearLayout>

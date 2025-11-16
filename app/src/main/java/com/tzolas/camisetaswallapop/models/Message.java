@@ -10,7 +10,8 @@ public class Message {
     private boolean read;
 
     private String type;       // text, offer, offerAccepted, offerRejected, system
-    private int offerPrice;    // precio ofertado si aplica
+    private int offerPrice;
+    private String status;     // "pending", "accepted", "rejected" (solo para oferta)// precio ofertado si aplica
 
 
     public Message() {}
@@ -42,5 +43,7 @@ public class Message {
 
     public int getOfferPrice() { return offerPrice; }
     public void setOfferPrice(int offerPrice) { this.offerPrice = offerPrice; }
+    public void setStatus(String status) { this.status = status; }
+    public String getStatus(){return status;}
 
 }

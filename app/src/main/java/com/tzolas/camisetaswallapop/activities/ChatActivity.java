@@ -211,4 +211,85 @@ public class ChatActivity extends AppCompatActivity {
             messagesListener.remove();
         }
     }
+
+    /** =========================================================
+     * ACEPTAR OFERTA
+     * ========================================================= */
+    private void aceptarOferta(Message m) {
+
+        String msgId = m.getId();
+
+        // 1) Actualizar mensaje: status = accepted
+        db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document(msgId)
+                .update("status", "accepted")
+                .addOnSuccessListener(v -> {
+
+                    // 2) marcar producto como vendido
+                    db.collection("products")
+                            .document(productId)
+                            .update(
+                                    "sold", true,
+                                    "buyerId", m.getSenderId(),
+                                    "soldAt", System.currentTimeMillis()
+                            );
+
+                    // 3) enviar mensaje del sistema
+                    enviarMensajeSistema("Has aceptado la oferta. Producto vendido ✔");
+
+                })
+                .addOnFailureListener(e ->
+                        Log.e("CHAT", "Error aceptando oferta", e)
+                );
+    }
+    /** =========================================================
+     * RECHAZAR OFERTA
+     * ========================================================= */
+    private void rechazarOferta(Message m) {
+
+        String msgId = m.getId();
+
+        // 1) Actualizar mensaje: status = rejected
+        db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document(msgId)
+                .update("status", "rejected")
+                .addOnSuccessListener(v -> {
+
+                    // 2) enviar mensaje del sistema
+                    enviarMensajeSistema("Has rechazado la oferta ❌");
+
+                })
+                .addOnFailureListener(e ->
+                        Log.e("CHAT", "Error rechazando oferta", e)
+                );
+    }
+    /** =========================================================
+     * Enviar mensaje del sistema al chat
+     * ========================================================= */
+    private void enviarMensajeSistema(String texto) {
+
+        String newId = UUID.randomUUID().toString();
+
+        Message sys = new Message(
+                newId,
+                "system",    // identificador especial
+                texto,
+                System.currentTimeMillis()
+        );
+
+        sys.setType("system");
+
+        db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document(newId)
+                .set(sys);
+    }
+
+
+
 }

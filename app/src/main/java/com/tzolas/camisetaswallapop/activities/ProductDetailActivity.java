@@ -321,7 +321,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     }
 
                     new com.tzolas.camisetaswallapop.repositories.OrderRepository()
-                            .sendOffer(chatId, buyerId, sellerId, price)
+                            .sendOffer(currentProduct.getId(),chatId, buyerId, price)
                             .addOnSuccessListener(aVoid ->
                                     Toast.makeText(this, "Oferta enviada", Toast.LENGTH_SHORT).show()
                             )

@@ -3,7 +3,8 @@ package com.tzolas.camisetaswallapop.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<Message> messages;
     private final String myUid;
 
+    // === Listener para aceptar / rechazar ===
+    public interface OfferActionListener {
+        void onAcceptOffer(Message m);
+        void onRejectOffer(Message m);
+    }
+
+    private OfferActionListener offerListener;
+
+    public void setOfferActionListener(OfferActionListener l) {
+        this.offerListener = l;
+    }
+
     public MessageAdapter(List<Message> messages, String myUid) {
         this.messages = messages;
         this.myUid = myUid;
@@ -31,9 +44,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemViewType(int position) {
-        return messages.get(position).getSenderId().equals(myUid)
-                ? TYPE_SENT
-                : TYPE_RECEIVED;
+        Message m = messages.get(position);
+
+        // 🚨 Todas las ofertas usan layout LEFT (recibido)
+        if ("offer".equals(m.getType())) {
+            return TYPE_RECEIVED;
+        }
+
+        return m.getSenderId().equals(myUid) ? TYPE_SENT : TYPE_RECEIVED;
     }
 
     @NonNull
@@ -52,14 +70,19 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
+
         Message m = messages.get(pos);
 
+        // ===============================================
+        // 🟦 MENSAJES ENVIADOS (DERECHA)
+        // ===============================================
         if (holder instanceof SentHolder) {
             SentHolder h = (SentHolder) holder;
 
             h.txtMessage.setText(m.getText());
             h.txtTime.setText(formatTime(m.getTimestamp()));
 
+            // Último mensaje enviado → estado (leído / entregado)
             int lastSentIndex = -1;
             for (int i = messages.size() - 1; i >= 0; i--) {
                 if (messages.get(i).getSenderId().equals(myUid)) {
@@ -86,14 +109,52 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 h.txtStatusText.setVisibility(View.GONE);
             }
 
-        } else {
-            ReceivedHolder h = (ReceivedHolder) holder;
-            h.txtMessage.setText(m.getText());
-            h.txtTime.setText(formatTime(m.getTimestamp()));
+            return;
         }
 
+        // ===============================================
+        // 🟥 MENSAJES RECIBIDOS (IZQUIERDA)
+        // ===============================================
+        ReceivedHolder h = (ReceivedHolder) holder;
+
+        h.txtMessage.setText(m.getText());
+        h.txtTime.setText(formatTime(m.getTimestamp()));
+
+        // Ocultamos botones siempre por defecto
+        h.layoutOfferButtons.setVisibility(View.GONE);
+
+        // ===============================================
+        // 🟧 MENSAJE DE OFERTA
+        // ===============================================
+        if ("offer".equals(m.getType())) {
+
+            // El comprador (quien envía la oferta) → NO ve botones
+            if (m.getSenderId().equals(myUid)) {
+                h.layoutOfferButtons.setVisibility(View.GONE);
+            }
+
+            // El vendedor → botones SOLO si está pendiente
+            else {
+                if ("pending".equals(m.getStatus())) {
+                    h.layoutOfferButtons.setVisibility(View.VISIBLE);
+
+                    h.btnAcceptOffer.setOnClickListener(v -> {
+                        if (offerListener != null) offerListener.onAcceptOffer(m);
+                    });
+
+                    h.btnRejectOffer.setOnClickListener(v -> {
+                        if (offerListener != null) offerListener.onRejectOffer(m);
+                    });
+
+                } else {
+                    h.layoutOfferButtons.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        // Animación
         holder.itemView.setAlpha(0f);
-        holder.itemView.animate().alpha(1f).setDuration(120).start();
+        holder.itemView.animate().alpha(1f).setDuration(100).start();
     }
 
     private String formatTime(long timestamp) {
@@ -117,11 +178,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     static class ReceivedHolder extends RecyclerView.ViewHolder {
         TextView txtMessage, txtTime;
+        LinearLayout layoutOfferButtons;
+        Button btnAcceptOffer, btnRejectOffer;
 
         public ReceivedHolder(@NonNull View item) {
             super(item);
             txtMessage = item.findViewById(R.id.txtMessageLeft);
             txtTime = item.findViewById(R.id.txtTimeLeft);
+
+            // Ofertas
+            layoutOfferButtons = item.findViewById(R.id.layoutOfferButtons);
+            btnAcceptOffer = item.findViewById(R.id.btnAcceptOffer);
+            btnRejectOffer = item.findViewById(R.id.btnRejectOffer);
         }
     }
 
