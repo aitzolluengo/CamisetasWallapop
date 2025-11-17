@@ -123,10 +123,20 @@ public class PerfilFragment extends Fragment {
         btnEditProfile.setOnClickListener(v -> mostrarOpcionesEditarPerfil());
 
         btnLogout.setOnClickListener(v -> {
+
             if (ratingListener != null) ratingListener.remove();
             auth.signOut();
-            requireActivity().finishAffinity();
+
+            // Ir a LoginActivity
+            Intent i = new Intent(requireActivity(), com.tzolas.camisetaswallapop.activities.LoginActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+            startActivity(i);
+
+            // Cerrar la Activity actual de forma segura
+            requireActivity().finish();
         });
+
 
         // Listas de productos
         ventaAdapter = new ProductsAdapter(requireContext(), listaVenta,
@@ -223,11 +233,17 @@ public class PerfilFragment extends Fragment {
      * ================================ */
     private void cargarProductosVentaYComprados(String uid) {
 
+        // ===============================
+        // 🔥 Cargar productos EN VENTA
+        // ===============================
         db.collection("products")
                 .whereEqualTo("userId", uid)
+                .whereEqualTo("sold", false)
                 .get()
                 .addOnSuccessListener(q -> {
+
                     listaVenta.clear();
+
                     for (DocumentSnapshot doc : q) {
                         Product p = doc.toObject(Product.class);
                         if (p != null) {
@@ -235,14 +251,20 @@ public class PerfilFragment extends Fragment {
                             listaVenta.add(p);
                         }
                     }
+
                     ventaAdapter.notifyDataSetChanged();
                 });
 
+        // ===============================
+        // 🔥 Cargar productos COMPRADOS
+        // ===============================
         db.collection("products")
                 .whereEqualTo("buyerId", uid)
                 .get()
                 .addOnSuccessListener(q -> {
+
                     listaComprados.clear();
+
                     for (DocumentSnapshot doc : q) {
                         Product p = doc.toObject(Product.class);
                         if (p != null) {
