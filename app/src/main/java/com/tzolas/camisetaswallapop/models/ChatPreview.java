@@ -7,7 +7,8 @@ public class ChatPreview {
     private String otherUserPhoto;
     private String lastMessage;
     private long lastMessageTime;
-    private String productId;  // ⬅️ NUEVO
+    private String productId;
+    private int unreadCount;// ⬅️ NUEVO
 
     public ChatPreview() {}
 
@@ -28,6 +29,8 @@ public class ChatPreview {
     public String getLastMessage() { return lastMessage; }
     public long getLastMessageTime() { return lastMessageTime; }
     public String getProductId() { return productId; }
+    public int getUnreadCount() { return unreadCount; }
+    public void setUnreadCount(int unreadCount) { this.unreadCount = unreadCount; }
 
     public void setChatId(String chatId) { this.chatId = chatId; }
     public void setOtherUserId(String otherUserId) { this.otherUserId = otherUserId; }

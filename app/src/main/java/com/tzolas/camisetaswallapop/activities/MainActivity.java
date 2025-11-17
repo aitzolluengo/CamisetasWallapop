@@ -3,12 +3,14 @@ package com.tzolas.camisetaswallapop.activities;
 import static android.content.Intent.getIntent;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
@@ -16,7 +18,7 @@ import com.tzolas.camisetaswallapop.fragments.BuscarFragment;
 import com.tzolas.camisetaswallapop.fragments.ChatFragment;
 import com.tzolas.camisetaswallapop.fragments.HomeFragment;
 import com.tzolas.camisetaswallapop.fragments.PerfilFragment;
-import com.tzolas.camisetaswallapop.fragments.SellFragment; // ✅ IMPORTADO
+import com.tzolas.camisetaswallapop.fragments.SellFragment;
 
 import java.util.Arrays;
 
@@ -59,9 +61,25 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         });
+
+        BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_chat);
+        badge.setVisible(false); // oculto por defecto
+        badge.setBackgroundColor(Color.parseColor("#C77DFF"));
+        badge.setBadgeTextColor(Color.WHITE);
+
         fixChatsWithoutParticipants();
+    }
 
+    public void updateChatBadge(int count) {
+        BottomNavigationView nav = findViewById(R.id.bottom_navigation);
+        BadgeDrawable badge = nav.getOrCreateBadge(R.id.nav_chat);
 
+        if (count > 0) {
+            badge.setVisible(true);
+            badge.setNumber(count);
+        } else {
+            badge.setVisible(false);
+        }
     }
 
     private void fixChatsWithoutParticipants() {
@@ -94,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // Este método centraliza la lógica de navegación según el Intent (goTo)
     private void handleGoTo(Intent intent) {
         if (intent == null) {
             loadFragment(new HomeFragment());
@@ -109,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new PerfilFragment());
             bottomNav.setSelectedItemId(R.id.nav_perfil);
         }
-        // (Opcional si deseas abrir a vender desde intent en algún momento)
         else if ("vender".equals(goTo)) {
             loadFragment(new SellFragment());
             bottomNav.setSelectedItemId(R.id.nav_sell);
@@ -118,6 +134,13 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new HomeFragment());
             bottomNav.setSelectedItemId(R.id.nav_inicio);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Ya no hace falta refrescar manualmente
     }
 
     @Override
@@ -132,4 +155,5 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
+
 }

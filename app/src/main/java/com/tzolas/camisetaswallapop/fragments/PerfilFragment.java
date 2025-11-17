@@ -36,6 +36,7 @@ import com.tzolas.camisetaswallapop.activities.ProductDetailActivity;
 import com.tzolas.camisetaswallapop.adapters.OffersAdapter;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
+import com.tzolas.camisetaswallapop.utils.CloudinaryUploader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -410,40 +411,52 @@ public class PerfilFragment extends Fragment {
     }
     private void subirFotoPerfil(Uri imageUri) {
 
-        String uid = FirebaseAuth.getInstance().getUid();
-        if (uid == null) return;
+        new Thread(() -> {
+            try {
+                CloudinaryUploader uploader = new CloudinaryUploader();
+                String url = uploader.uploadImage(requireContext(), imageUri);
 
-        StorageReference ref = FirebaseStorage.getInstance()
-                .getReference("profile_photos/" + uid + ".jpg");
+                if (url == null) {
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(getContext(), "Error subiendo foto", Toast.LENGTH_SHORT).show());
+                    return;
+                }
 
-        ref.putFile(imageUri)
-                .addOnSuccessListener(task -> ref.getDownloadUrl()
-                        .addOnSuccessListener(url -> {
+                String uid = FirebaseAuth.getInstance().getUid();
+                if (uid == null) return;
 
-                            // 1️⃣ Guardar en FirebaseAuth (para mostrar en todas partes)
-                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                            if (user != null) {
-                                user.updateProfile(
-                                        new UserProfileChangeRequest.Builder()
-                                                .setPhotoUri(url)
-                                                .build()
-                                );
-                            }
+                // 1️⃣ Guardar en FirebaseAuth
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    user.updateProfile(
+                            new UserProfileChangeRequest.Builder()
+                                    .setPhotoUri(Uri.parse(url))
+                                    .build()
+                    );
+                }
 
-                            // 2️⃣ Guardar en Firestore
-                            FirebaseFirestore.getInstance()
-                                    .collection("users")
-                                    .document(uid)
-                                    .update("photo", url.toString());
+                // 2️⃣ Guardar en Firestore
+                FirebaseFirestore.getInstance()
+                        .collection("users")
+                        .document(uid)
+                        .update("photo", url);
 
-                            Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+                // 3️⃣ Mostrar en pantalla
+                requireActivity().runOnUiThread(() -> {
+                    Glide.with(this)
+                            .load(url)
+                            .circleCrop()
+                            .into(ivProfilePhoto);
 
-                            // 3️⃣ Mostrar en pantalla
-                            Glide.with(this).load(url).circleCrop().into(ivProfilePhoto);
+                    Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+                });
 
-                        }))
-                .addOnFailureListener(e ->
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
                         Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+
+        }).start();
     }
 
 }

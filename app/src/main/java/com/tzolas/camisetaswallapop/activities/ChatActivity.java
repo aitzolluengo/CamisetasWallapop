@@ -1,6 +1,7 @@
 package com.tzolas.camisetaswallapop.activities;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -8,6 +9,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -67,6 +69,17 @@ public class ChatActivity extends AppCompatActivity {
             finish();
             return;
         }
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+
+                markAllAsReadBeforeExit();   // 🔥 1. Marca como leído al instante
+                setResult(RESULT_OK);        // 🔥 2. Informa al fragment
+                finish();                    // 🔥 3. Cierra chat
+            }
+        });
+
+
 
         initViews();
         setupRecycler();
@@ -114,6 +127,22 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(lm);
         recyclerView.setAdapter(adapter);
     }
+    private void markAllAsReadBeforeExit() {
+        db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .whereEqualTo("read", false)
+                .get()
+                .addOnSuccessListener(snap -> {
+                    for (DocumentSnapshot d : snap) {
+                        String sender = d.getString("senderId");
+                        if (sender != null && !sender.equals(currentUserId)) {
+                            d.getReference().update("read", true);
+                        }
+                    }
+                });
+    }
+
 
     /** =========================================================
      * CARGAR DATOS DEL USUARIO DEL CHAT
@@ -185,6 +214,9 @@ public class ChatActivity extends AppCompatActivity {
                     if (!messageList.isEmpty()) {
                         recyclerView.scrollToPosition(messageList.size() - 1);
                     }
+
+                    // 🔥 ACTUALIZAR EN TIEMPO REAL
+                    sendBroadcast(new Intent("CHAT_UPDATED"));
                 });
     }
 
@@ -385,4 +417,41 @@ public class ChatActivity extends AppCompatActivity {
             messagesListener.remove();
         }
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        marcarMensajesComoLeidos();
+    }
+
+    private void marcarMensajesComoLeidos() {
+        if (chatId == null || currentUserId == null) return;
+
+        db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .whereEqualTo("read", false)
+                .get()
+                .addOnSuccessListener(q -> {
+                    for (DocumentSnapshot d : q.getDocuments()) {
+                        String sender = d.getString("senderId");
+
+                        // solo marco como leído si NO soy yo el que envió
+                        if (sender != null && !sender.equals(currentUserId)) {
+                            d.getReference().update("read", true);
+                        }
+                    }
+
+                    // notif a fragment para que quite el (1)
+                });
+    }
+
+    // Cuando salimos del chat → refrescar lista en fragment
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sendBroadcast(new Intent("CHAT_UPDATED"));
+    }
+
+
+
 }
