@@ -78,6 +78,17 @@
             android:src="@drawable/ic_send"
             android:tint="#5D4CFF"
             android:background="@android:color/transparent" />
+        <ImageButton
+            android:id="@+id/btnSendOffer"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_local_offer"
+            android:background="@android:color/transparent"
+            android:tint="#FF8800"
+            android:contentDescription="Enviar oferta" />
+
+
     </LinearLayout>
 
 </LinearLayout>

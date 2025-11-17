@@ -1,5 +1,6 @@
 package com.tzolas.camisetaswallapop.activities;
 
+
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -14,7 +15,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
+
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.tzolas.camisetaswallapop.R;
@@ -23,6 +29,7 @@ import com.tzolas.camisetaswallapop.models.Message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class ChatActivity extends AppCompatActivity {
@@ -30,6 +37,7 @@ public class ChatActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private EditText inputMessage;
     private ImageButton btnSend;
+    private ImageButton btnSendOffer;   // 🟣 NUEVO botón para enviar oferta
 
     private ImageView imgChatUser;
     private TextView txtChatUserName;
@@ -42,17 +50,21 @@ public class ChatActivity extends AppCompatActivity {
     private ListenerRegistration messagesListener;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    // 🟣 Info del producto para oferta
+    private int productPricePoints = 0;   // precio en puntos
+    private String productOwnerId;        // dueño del producto (por seguridad)
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
         chatId = getIntent().getStringExtra("chatId");
-        sellerId = getIntent().getStringExtra("sellerId");
+        sellerId = getIntent().getStringExtra("sellerId");     // dueño del producto
         productId = getIntent().getStringExtra("productId");
         currentUserId = FirebaseAuth.getInstance().getUid();
 
-        if (chatId == null || currentUserId == null) {
+        if (chatId == null || currentUserId == null || productId == null) {
             finish();
             return;
         }
@@ -60,15 +72,19 @@ public class ChatActivity extends AppCompatActivity {
         initViews();
         setupRecycler();
         loadChatUserInfo();
+        loadProductInfoForChat(); // 🟣 cargamos precio + owner
         listenMessages();
 
         btnSend.setOnClickListener(v -> sendMessage());
+        btnSendOffer.setOnClickListener(v -> sendOffer());   // 🟣 click oferta
     }
 
     private void initViews() {
         recyclerView = findViewById(R.id.recyclerMessages);
         inputMessage = findViewById(R.id.editMessage);
         btnSend = findViewById(R.id.btnSend);
+        btnSendOffer = findViewById(R.id.btnSendOffer);  // 🟣 asegúrate de tener este id en el XML
+
         imgChatUser = findViewById(R.id.imgChatUser);
         txtChatUserName = findViewById(R.id.txtChatUserName);
     }
@@ -77,7 +93,22 @@ public class ChatActivity extends AppCompatActivity {
      * CONFIG LISTA
      * ========================================================= */
     private void setupRecycler() {
-        adapter = new MessageAdapter(messageList, currentUserId);
+        adapter = new MessageAdapter(
+                messageList,
+                currentUserId,
+                // 🟣 Listener para aceptar / rechazar oferta desde el mensaje
+                new MessageAdapter.OnOfferActionListener() {
+                    @Override
+                    public void onAccept(Message m) {
+                        aceptarOferta(m);
+                    }
+
+                    @Override
+                    public void onReject(Message m) {
+                        rechazarOferta(m);
+                    }
+                }
+        );
 
         LinearLayoutManager lm = new LinearLayoutManager(this);
         lm.setStackFromEnd(true);
@@ -103,6 +134,26 @@ public class ChatActivity extends AppCompatActivity {
                             .load(photo != null ? photo : R.drawable.ic_user_placeholder)
                             .circleCrop()
                             .into(imgChatUser);
+                });
+    }
+
+    /** =========================================================
+     * CARGAR INFO DEL PRODUCTO: PRECIO EN PUNTOS
+     * ========================================================= */
+    private void loadProductInfoForChat() {
+        db.collection("products")
+                .document(productId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) return;
+
+                    productOwnerId = doc.getString("userId");
+
+                    Double price = doc.getDouble("price");
+                    if (price != null) {
+                        // asumiendo que 1€ = 1 punto, o ya son puntos directamente
+                        productPricePoints = (int) Math.round(price);
+                    }
                 });
     }
 
@@ -146,10 +197,8 @@ public class ChatActivity extends AppCompatActivity {
 
         for (Message msg : messageList) {
 
-            // Mensaje recibido (del otro)
             if (!msg.getSenderId().equals(currentUserId)) {
 
-                // ENTREGADO
                 if (!msg.isDelivered()) {
                     db.collection("chats")
                             .document(chatId)
@@ -158,7 +207,6 @@ public class ChatActivity extends AppCompatActivity {
                             .update("delivered", true);
                 }
 
-                // LEÍDO
                 if (!msg.isRead()) {
                     db.collection("chats")
                             .document(chatId)
@@ -171,7 +219,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * 🔥 ENVIAR MENSAJE
+     * 🔥 ENVIAR MENSAJE NORMAL
      * ========================================================= */
     private void sendMessage() {
 
@@ -189,6 +237,7 @@ public class ChatActivity extends AppCompatActivity {
 
         m.setDelivered(false);
         m.setRead(false);
+        m.setType("text");
 
         db.collection("chats")
                 .document(chatId)
@@ -202,71 +251,152 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     /** =========================================================
-     * LIMPIAR LISTENERS
+     * 🔥 ENVIAR OFERTA (PRECIO DEL PRODUCTO)
      * ========================================================= */
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (messagesListener != null) {
-            messagesListener.remove();
+    private void sendOffer() {
+
+        // No tiene sentido si no hay precio cargado aún
+        if (productPricePoints <= 0) {
+            Log.e("CHAT", "Precio de producto no cargado todavía");
+            return;
         }
-    }
 
-    /** =========================================================
-     * ACEPTAR OFERTA
-     * ========================================================= */
-    private void aceptarOferta(Message m) {
+        // solo si NO soy el dueño del producto
+        if (currentUserId != null && currentUserId.equals(productOwnerId)) {
+            Log.e("CHAT", "El dueño no puede auto-ofertarse");
+            return;
+        }
 
-        String msgId = m.getId();
+        String msgId = UUID.randomUUID().toString();
 
-        // 1) Actualizar mensaje: status = accepted
+        String text = String.format(
+                Locale.getDefault(),
+                "Te ofrezco %d puntos por este producto.",
+                productPricePoints
+        );
+
+        Message offerMsg = new Message(
+                msgId,
+                currentUserId,
+                text,
+                System.currentTimeMillis()
+        );
+        offerMsg.setType("offer");
+        offerMsg.setOfferPrice(productPricePoints);
+        offerMsg.setStatus("pending");
+        offerMsg.setDelivered(false);
+        offerMsg.setRead(false);
+
         db.collection("chats")
                 .document(chatId)
                 .collection("messages")
                 .document(msgId)
-                .update("status", "accepted")
-                .addOnSuccessListener(v -> {
-
-                    // 2) marcar producto como vendido
-                    db.collection("products")
-                            .document(productId)
-                            .update(
-                                    "sold", true,
-                                    "buyerId", m.getSenderId(),
-                                    "soldAt", System.currentTimeMillis()
-                            );
-
-                    // 3) enviar mensaje del sistema
-                    enviarMensajeSistema("Has aceptado la oferta. Producto vendido ✔");
-
-                })
+                .set(offerMsg)
+                .addOnSuccessListener(aVoid ->
+                        Log.d("CHAT", "Oferta enviada correctamente"))
                 .addOnFailureListener(e ->
-                        Log.e("CHAT", "Error aceptando oferta", e)
+                        Log.e("CHAT", "Error enviando oferta", e)
                 );
     }
+
+    /** =========================================================
+     * ACEPTAR OFERTA: mover puntos + marcar producto vendido
+     * ========================================================= */
+    private void aceptarOferta(Message m) {
+
+        if (m == null || !"offer".equals(m.getType())) return;
+        if (!"pending".equals(m.getStatus())) return;
+
+        String buyerId = m.getSenderId();
+        String sellerUid = productOwnerId;  // debería ser el dueño del producto
+
+        if (sellerUid == null || buyerId == null) return;
+
+        int offerPoints = m.getOfferPrice();
+
+        // transacción para mover puntos y marcar producto vendido
+        db.runTransaction(trx -> {
+
+            DocumentReference buyerRef = db.collection("users").document(buyerId);
+            DocumentReference sellerRef = db.collection("users").document(sellerUid);
+            DocumentReference productRef = db.collection("products").document(productId);
+            DocumentReference msgRef = db.collection("chats")
+                    .document(chatId)
+                    .collection("messages")
+                    .document(m.getId());
+
+            DocumentSnapshot buyerSnap = trx.get(buyerRef);
+            DocumentSnapshot sellerSnap = trx.get(sellerRef);
+            DocumentSnapshot prodSnap = trx.get(productRef);
+
+            Long buyerPoints = buyerSnap.getLong("points");
+            if (buyerPoints == null) buyerPoints = 0L;
+
+            Boolean alreadySold = prodSnap.getBoolean("sold");
+            if (alreadySold != null && alreadySold) {
+                throw new FirebaseFirestoreException(
+                        "Producto ya vendido",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                );
+            }
+
+            if (buyerPoints < offerPoints) {
+                throw new FirebaseFirestoreException(
+                        "El comprador no tiene puntos suficientes",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                );
+            }
+
+            Long sellerPoints = sellerSnap.getLong("points");
+            if (sellerPoints == null) sellerPoints = 0L;
+
+            // Actualizar puntos
+            trx.update(buyerRef,
+                    "points", buyerPoints - offerPoints,
+                    "spentPoints", FieldValue.increment(offerPoints));
+
+            trx.update(sellerRef,
+                    "points", sellerPoints + offerPoints);
+
+            // Marcar producto vendido
+            trx.update(productRef,
+                    "sold", true,
+                    "buyerId", buyerId,
+                    "soldAt", System.currentTimeMillis());
+
+            // Marcar mensaje como aceptado
+            trx.update(msgRef, "status", "accepted");
+
+            return null;
+        }).addOnSuccessListener(v -> {
+            Log.d("CHAT", "Oferta aceptada, producto vendido y puntos movidos");
+            enviarMensajeSistema("✅ Has aceptado la oferta. Producto vendido.");
+        }).addOnFailureListener(e -> {
+            Log.e("CHAT", "Error al aceptar oferta", e);
+            enviarMensajeSistema("❌ No se pudo aceptar la oferta: " + e.getMessage());
+        });
+    }
+
     /** =========================================================
      * RECHAZAR OFERTA
      * ========================================================= */
     private void rechazarOferta(Message m) {
 
-        String msgId = m.getId();
+        if (m == null || !"offer".equals(m.getType())) return;
 
-        // 1) Actualizar mensaje: status = rejected
         db.collection("chats")
                 .document(chatId)
                 .collection("messages")
-                .document(msgId)
+                .document(m.getId())
                 .update("status", "rejected")
                 .addOnSuccessListener(v -> {
-
-                    // 2) enviar mensaje del sistema
                     enviarMensajeSistema("Has rechazado la oferta ❌");
-
                 })
                 .addOnFailureListener(e ->
                         Log.e("CHAT", "Error rechazando oferta", e)
                 );
     }
+
     /** =========================================================
      * Enviar mensaje del sistema al chat
      * ========================================================= */
@@ -276,12 +406,14 @@ public class ChatActivity extends AppCompatActivity {
 
         Message sys = new Message(
                 newId,
-                "system",    // identificador especial
+                "system",
                 texto,
                 System.currentTimeMillis()
         );
 
         sys.setType("system");
+        sys.setDelivered(true);
+        sys.setRead(true);
 
         db.collection("chats")
                 .document(chatId)
@@ -290,6 +422,14 @@ public class ChatActivity extends AppCompatActivity {
                 .set(sys);
     }
 
-
-
+    /** =========================================================
+     * LIMPIAR LISTENERS
+     * ========================================================= */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (messagesListener != null) {
+            messagesListener.remove();
+        }
+    }
 }

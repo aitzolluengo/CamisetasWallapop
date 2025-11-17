@@ -25,31 +25,26 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<Message> messages;
     private final String myUid;
 
-    // === Listener para aceptar / rechazar ===
-    public interface OfferActionListener {
-        void onAcceptOffer(Message m);
-        void onRejectOffer(Message m);
+    // === INTERFAZ PARA OFERTAS ===
+    public interface OnOfferActionListener {
+        void onAccept(Message m);
+        void onReject(Message m);
     }
 
-    private OfferActionListener offerListener;
+    private final OnOfferActionListener offerListener;
 
-    public void setOfferActionListener(OfferActionListener l) {
-        this.offerListener = l;
-    }
-
-    public MessageAdapter(List<Message> messages, String myUid) {
+    public MessageAdapter(List<Message> messages, String myUid, OnOfferActionListener listener) {
         this.messages = messages;
         this.myUid = myUid;
+        this.offerListener = listener;
     }
 
     @Override
     public int getItemViewType(int position) {
         Message m = messages.get(position);
 
-        // 🚨 Todas las ofertas usan layout LEFT (recibido)
-        if ("offer".equals(m.getType())) {
-            return TYPE_RECEIVED;
-        }
+        // Las ofertas siempre se muestran con layout de recibido
+        if ("offer".equals(m.getType())) return TYPE_RECEIVED;
 
         return m.getSenderId().equals(myUid) ? TYPE_SENT : TYPE_RECEIVED;
     }
@@ -73,23 +68,17 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         Message m = messages.get(pos);
 
-        // ===============================================
-        // 🟦 MENSAJES ENVIADOS (DERECHA)
-        // ===============================================
+        // -------------------------
+        // MENSAJE ENVIADO (derecha)
+        // -------------------------
         if (holder instanceof SentHolder) {
+
             SentHolder h = (SentHolder) holder;
 
             h.txtMessage.setText(m.getText());
             h.txtTime.setText(formatTime(m.getTimestamp()));
 
-            // Último mensaje enviado → estado (leído / entregado)
-            int lastSentIndex = -1;
-            for (int i = messages.size() - 1; i >= 0; i--) {
-                if (messages.get(i).getSenderId().equals(myUid)) {
-                    lastSentIndex = i;
-                    break;
-                }
-            }
+            int lastSentIndex = getLastSentIndex();
 
             if (pos == lastSentIndex) {
                 h.txtStatusText.setVisibility(View.VISIBLE);
@@ -112,58 +101,65 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        // ===============================================
-        // 🟥 MENSAJES RECIBIDOS (IZQUIERDA)
-        // ===============================================
+        // -------------------------
+        // MENSAJE RECIBIDO (izquierda)
+        // -------------------------
         ReceivedHolder h = (ReceivedHolder) holder;
 
         h.txtMessage.setText(m.getText());
         h.txtTime.setText(formatTime(m.getTimestamp()));
 
-        // Ocultamos botones siempre por defecto
+        // Por defecto no se ven los botones
         h.layoutOfferButtons.setVisibility(View.GONE);
 
-        // ===============================================
+        // ===================================================
         // 🟧 MENSAJE DE OFERTA
-        // ===============================================
+        // ===================================================
         if ("offer".equals(m.getType())) {
 
-            // El comprador (quien envía la oferta) → NO ve botones
-            if (m.getSenderId().equals(myUid)) {
-                h.layoutOfferButtons.setVisibility(View.GONE);
-            }
+            boolean yoSoyComprador = m.getSenderId().equals(myUid);
 
-            // El vendedor → botones SOLO si está pendiente
-            else {
+            if (yoSoyComprador) {
+                // Yo envié la oferta → no muestro botones
+                h.layoutOfferButtons.setVisibility(View.GONE);
+            } else {
+
                 if ("pending".equals(m.getStatus())) {
+
                     h.layoutOfferButtons.setVisibility(View.VISIBLE);
 
                     h.btnAcceptOffer.setOnClickListener(v -> {
-                        if (offerListener != null) offerListener.onAcceptOffer(m);
+                        if (offerListener != null) offerListener.onAccept(m);
                     });
 
                     h.btnRejectOffer.setOnClickListener(v -> {
-                        if (offerListener != null) offerListener.onRejectOffer(m);
+                        if (offerListener != null) offerListener.onReject(m);
                     });
 
                 } else {
+                    // Oferta ya gestionada
                     h.layoutOfferButtons.setVisibility(View.GONE);
                 }
             }
         }
 
-        // Animación
+        // Animación estética
         holder.itemView.setAlpha(0f);
-        holder.itemView.animate().alpha(1f).setDuration(100).start();
+        holder.itemView.animate().alpha(1f).setDuration(110).start();
+    }
+
+    private int getLastSentIndex() {
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            if (messages.get(i).getSenderId().equals(myUid)) return i;
+        }
+        return -1;
     }
 
     private String formatTime(long timestamp) {
         return new SimpleDateFormat("HH:mm").format(new Date(timestamp));
     }
 
-    // ==========================================
-    // HOLDERS
-    // ==========================================
+    // HOLDDERS =====================================
 
     static class SentHolder extends RecyclerView.ViewHolder {
         TextView txtMessage, txtTime, txtStatusText;
@@ -186,7 +182,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             txtMessage = item.findViewById(R.id.txtMessageLeft);
             txtTime = item.findViewById(R.id.txtTimeLeft);
 
-            // Ofertas
             layoutOfferButtons = item.findViewById(R.id.layoutOfferButtons);
             btnAcceptOffer = item.findViewById(R.id.btnAcceptOffer);
             btnRejectOffer = item.findViewById(R.id.btnRejectOffer);
