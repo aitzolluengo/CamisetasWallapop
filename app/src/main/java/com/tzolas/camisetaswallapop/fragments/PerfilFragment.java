@@ -25,9 +25,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.ProductDetailActivity;
 import com.tzolas.camisetaswallapop.adapters.OffersAdapter;
@@ -277,11 +280,19 @@ public class PerfilFragment extends Fragment {
     @Override
     public void onActivityResult(int r, int res, @Nullable Intent data) {
         super.onActivityResult(r, res, data);
+
         if (r == PICK_IMAGE && res == Activity.RESULT_OK && data != null) {
+
             Uri img = data.getData();
+
+            // Muestra la imagen temporalmente
             ivProfilePhoto.setImageURI(img);
+
+            // 🔥 SUBIR foto a Firebase
+            subirFotoPerfil(img);
         }
     }
+
 
     /** ================================
      * EDITAR PERFIL
@@ -397,4 +408,42 @@ public class PerfilFragment extends Fragment {
 
                 });
     }
+    private void subirFotoPerfil(Uri imageUri) {
+
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid == null) return;
+
+        StorageReference ref = FirebaseStorage.getInstance()
+                .getReference("profile_photos/" + uid + ".jpg");
+
+        ref.putFile(imageUri)
+                .addOnSuccessListener(task -> ref.getDownloadUrl()
+                        .addOnSuccessListener(url -> {
+
+                            // 1️⃣ Guardar en FirebaseAuth (para mostrar en todas partes)
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            if (user != null) {
+                                user.updateProfile(
+                                        new UserProfileChangeRequest.Builder()
+                                                .setPhotoUri(url)
+                                                .build()
+                                );
+                            }
+
+                            // 2️⃣ Guardar en Firestore
+                            FirebaseFirestore.getInstance()
+                                    .collection("users")
+                                    .document(uid)
+                                    .update("photo", url.toString());
+
+                            Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+
+                            // 3️⃣ Mostrar en pantalla
+                            Glide.with(this).load(url).circleCrop().into(ivProfilePhoto);
+
+                        }))
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
 }
