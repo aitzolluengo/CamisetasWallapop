@@ -236,9 +236,19 @@ public class ProductDetailActivity extends AppCompatActivity {
     private void loadSellerInfo(String sellerId) {
         new UserRepository()
                 .getUserById(sellerId)
-                .addOnSuccessListener(doc ->
-                        txtSellerName.setText(doc.getString("name"))
-                );
+                .addOnSuccessListener(doc -> {
+                    String name = doc.getString("name");
+                    txtSellerName.setText(name != null ? name : "Vendedor");
+
+                    // 🔥 SOLO hacer clickable el bloque del vendedor
+                    sellerBlock.setOnClickListener(v -> {
+                        // Verificar que no sea el propio usuario
+                        String currentUserId = FirebaseAuth.getInstance().getUid();
+                        if (currentUserId != null && !currentUserId.equals(sellerId)) {
+                            abrirPerfilVendedor(sellerId, name);
+                        }
+                    });
+                });
     }
 
     // ============================================================
@@ -575,6 +585,13 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error al eliminar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
+    }
+    // 🔥 METODO SIMPLE: Abrir perfil del vendedor
+    private void abrirPerfilVendedor(String sellerId, String sellerName) {
+        Intent intent = new Intent(this, SellerProfileActivity.class);
+        intent.putExtra("sellerId", sellerId);
+        intent.putExtra("sellerName", sellerName);
+        startActivity(intent);
     }
 
 }

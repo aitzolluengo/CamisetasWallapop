@@ -12,6 +12,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -21,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +85,12 @@ public class SearchResultsActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    adapter.updateProducts(filtered);
+
+                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+                    SecurityRepository securityRepo = new SecurityRepository(this);
+                    List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
+
+                    adapter.updateProducts(sinUsuariosBloqueados);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error cargando productos", Toast.LENGTH_SHORT).show());
@@ -103,7 +110,12 @@ public class SearchResultsActivity extends AppCompatActivity {
                             if (title.contains(q) || desc.contains(q)) filtered.add(p);
                         }
                     }
-                    adapter.updateProducts(filtered);
+
+                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+                    SecurityRepository securityRepo = new SecurityRepository(this);
+                    List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
+
+                    adapter.updateProducts(sinUsuariosBloqueados);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Error en la búsqueda", Toast.LENGTH_SHORT).show());
@@ -251,7 +263,11 @@ public class SearchResultsActivity extends AppCompatActivity {
                         filtered.add(p);
                     }
 
-                    adapter.updateProducts(filtered);
+                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+                    SecurityRepository securityRepo = new SecurityRepository(this);
+                    List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
+
+                    adapter.updateProducts(sinUsuariosBloqueados);
                 });
     }
 

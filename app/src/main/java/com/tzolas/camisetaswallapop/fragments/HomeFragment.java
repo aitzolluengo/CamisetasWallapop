@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.activities.ProductDetailActivity;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
@@ -85,6 +86,7 @@ public class HomeFragment extends Fragment {
         });
 
         // ViewModel
+        // ViewModel
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         viewModel.getProducts().observe(getViewLifecycleOwner(), products -> {
@@ -109,6 +111,11 @@ public class HomeFragment extends Fragment {
 
             fullList = filtered;
 
+            // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+            SecurityRepository securityRepo = new SecurityRepository(requireContext());
+            List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(fullList);
+            fullList = sinUsuariosBloqueados;
+
             // generar lista favoritos
             favList = new ArrayList<>();
             for (Product p : fullList) {
@@ -118,17 +125,6 @@ public class HomeFragment extends Fragment {
             // mostrar todos por defecto
             showingFavs = false;
             showAll();
-        });
-
-        // Eventos
-        btnAll.setOnClickListener(v -> {
-            showingFavs = false;
-            showAll();
-        });
-
-        btnFavs.setOnClickListener(v -> {
-            showingFavs = true;
-            showFavs();
         });
 
         return view;

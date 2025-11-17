@@ -16,10 +16,13 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.models.Product;
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+
 
 public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHolder> {
 
@@ -197,4 +200,19 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
             btnFavorite = itemView.findViewById(R.id.btnFavorite);
         }
     }
+    public void actualizarListaFiltrada(List<Product> products, Context context) {
+        SecurityRepository securityRepo = new SecurityRepository(context);
+        List<Product> productosFiltrados = new ArrayList<>();
+
+        for (Product product : products) {
+            if (!securityRepo.isUserBlocked(product.getUserId())) {
+                productosFiltrados.add(product);
+            }
+        }
+
+        this.products.clear();  // ← cambia productList → products
+        this.products.addAll(productosFiltrados);  // ← igual aquí
+        notifyDataSetChanged();
+    }
+
 }

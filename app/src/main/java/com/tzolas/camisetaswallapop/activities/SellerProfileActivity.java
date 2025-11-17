@@ -1,18 +1,25 @@
 package com.tzolas.camisetaswallapop.activities;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +31,11 @@ public class SellerProfileActivity extends AppCompatActivity {
     private RecyclerView recycler;
     private ProductsAdapter adapter;
     private List<Product> productList = new ArrayList<>();
+    private Button btnSecurity;
+
+    private SecurityRepository securityRepository;
+    private String sellerId;
+    private String sellerName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,30 +46,124 @@ public class SellerProfileActivity extends AppCompatActivity {
         txtSellerName = findViewById(R.id.txtSellerNameProfile);
         txtSellerEmail = findViewById(R.id.txtSellerEmailProfile);
         recycler = findViewById(R.id.recyclerSellerProducts);
+        btnSecurity = findViewById(R.id.btnSecurity);
 
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ProductsAdapter(this, productList, product -> {
-            // Qué pasa cuando se hace click en un producto
-            // Por ejemplo, abrir detalles del producto
-            // (puedes dejarlo vacío si no quieres clics aquí)
-        });        recycler.setAdapter(adapter);
+            // Tu código existente para click en producto
+        });
+        recycler.setAdapter(adapter);
 
-        String sellerId = getIntent().getStringExtra("sellerId");
+        securityRepository = new SecurityRepository(this);
+
+        sellerId = getIntent().getStringExtra("sellerId");
+        sellerName = getIntent().getStringExtra("sellerName");
 
         if (sellerId != null) {
             loadSellerInfo(sellerId);
             loadSellerProducts(sellerId);
+            configurarBotonSeguridad();
+        } else {
+            Toast.makeText(this, "Error: ID de vendedor no disponible", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
-    private void loadSellerInfo(String sellerId) {
+    private void configurarBotonSeguridad() {
+        String currentUserId = FirebaseAuth.getInstance().getUid();
+        if (currentUserId != null && currentUserId.equals(sellerId)) {
+            btnSecurity.setVisibility(View.GONE);
+        } else {
+            btnSecurity.setVisibility(View.VISIBLE);
+            btnSecurity.setOnClickListener(v -> {
+                mostrarOpcionesSeguridad();
+            });
+        }
+    }
 
+    private void mostrarOpcionesSeguridad() {
+        String[] opciones = {"Bloquear usuario", "Reportar usuario"};
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Opciones de seguridad")
+                .setItems(opciones, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            mostrarDialogoBloquear();
+                            break;
+                        case 1:
+                            mostrarDialogoReportar();
+                            break;
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void mostrarDialogoBloquear() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Bloquear usuario")
+                .setMessage("¿Estás seguro de que quieres bloquear a " + sellerName + "?\n\nNo podrás:\n• Ver sus productos\n• Recibir sus mensajes\n• Ver sus publicaciones en búsquedas")
+                .setPositiveButton("Bloquear", (dialog, which) -> {
+                    boolean exito = securityRepository.blockUser(sellerId, sellerName);
+                    if (exito) {
+                        Toast.makeText(this, "Usuario bloqueado correctamente", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(this, "Error al bloquear usuario", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void mostrarDialogoReportar() {
+        String[] tiposReporte = {
+                "Contenido inapropiado",
+                "Spam",
+                "Información falsa",
+                "Comportamiento sospechoso",
+                "Productos prohibidos",
+                "Otro"
+        };
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Seleccionar tipo de reporte")
+                .setItems(tiposReporte, (dialog, which) -> {
+                    String tipo = tiposReporte[which];
+                    mostrarDialogoDetallesReporte(tipo);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void mostrarDialogoDetallesReporte(String tipo) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_report_details, null);
+        EditText edtDescripcion = dialogView.findViewById(R.id.edtReportDescription);
+
+        new android.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setTitle("Reportar - " + tipo)
+                .setPositiveButton("Enviar reporte", (dialog, which) -> {
+                    String descripcion = edtDescripcion.getText().toString().trim();
+                    if (descripcion.isEmpty()) {
+                        Toast.makeText(this, "Por favor describe el problema", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    securityRepository.reportUser(sellerId, sellerName, tipo, descripcion);
+                    Toast.makeText(this, "Reporte enviado correctamente", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void loadSellerInfo(String sellerId) {
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(sellerId)
                 .get()
                 .addOnSuccessListener(doc -> {
-
                     String name = doc.getString("name");
                     String photo = doc.getString("photo");
                     String email = doc.getString("email");
@@ -77,20 +183,16 @@ public class SellerProfileActivity extends AppCompatActivity {
     }
 
     private void loadSellerProducts(String sellerId) {
-
         FirebaseFirestore.getInstance()
                 .collection("products")
                 .whereEqualTo("userId", sellerId)
                 .get()
                 .addOnSuccessListener(query -> {
-
                     productList.clear();
-
                     for (var doc : query.getDocuments()) {
                         Product p = doc.toObject(Product.class);
                         if (p != null) productList.add(p);
                     }
-
                     adapter.notifyDataSetChanged();
                 });
     }
