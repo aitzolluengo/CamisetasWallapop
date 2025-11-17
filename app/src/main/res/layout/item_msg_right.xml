@@ -1,43 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="6dp"
     android:gravity="end"
+    android:padding="6dp"
     android:orientation="vertical">
 
-    <!-- BURBUJA DEL MENSAJE -->
+    <!-- BURBUJA MENSAJE -->
     <TextView
         android:id="@+id/txtMessageRight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="260dp"
-        android:padding="10dp"
+        android:background="@drawable/bg_bubble_right"
+        android:padding="12dp"
         android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:background="@drawable/bg_bubble_right" />
+        android:textSize="15sp" />
 
-    <!-- HORA + ESTADO (EN TEXTO) -->
+    <!-- HORA + ESTADO -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="end"
         android:orientation="horizontal"
-        android:layout_marginTop="2dp">
+        android:layout_marginTop="3dp">
 
         <TextView
             android:id="@+id/txtTimeRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="14:22"
             android:textSize="11sp"
-            android:textColor="#DDDDDD"
-            android:layout_marginEnd="8dp"/>
+            android:textColor="#E3F2FD"
+            android:layout_marginEnd="6dp"/>
 
         <TextView
             android:id="@+id/txtStatusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Entregado"
             android:textSize="11sp"
-            android:textColor="#98E2FF"
+            android:textColor="#BBDEFB"
             android:visibility="gone"/>
     </LinearLayout>
 

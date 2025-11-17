@@ -21,6 +21,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
+    private static final int TYPE_OFFER_SENT = 10;     // 🔵 oferta enviada derecha
+    private static final int TYPE_OFFER_RECEIVED = 11; // 🔴 oferta recibida izquierda
 
     private final List<Message> messages;
     private final String myUid;
@@ -39,38 +41,126 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.offerListener = listener;
     }
 
+    // ============================================================
+    // TIPOS DE VISTA
+    // ============================================================
     @Override
     public int getItemViewType(int position) {
         Message m = messages.get(position);
 
-        // Las ofertas siempre se muestran con layout de recibido
-        if ("offer".equals(m.getType())) return TYPE_RECEIVED;
+        if ("offer".equals(m.getType())) {
+            if (m.getSenderId().equals(myUid)) {
+                return TYPE_OFFER_SENT;     // oferta derecha
+            } else {
+                return TYPE_OFFER_RECEIVED; // oferta izquierda
+            }
+        }
 
         return m.getSenderId().equals(myUid) ? TYPE_SENT : TYPE_RECEIVED;
     }
 
+    // ============================================================
+    // CREAR VISTA
+    // ============================================================
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
-        if (type == TYPE_SENT) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_msg_right, parent, false);
-            return new SentHolder(view);
-        } else {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_msg_left, parent, false);
-            return new ReceivedHolder(view);
+
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        switch (type) {
+
+            case TYPE_OFFER_SENT:
+                return new OfferSentHolder(
+                        inflater.inflate(R.layout.item_msg_offer_right, parent, false)
+                );
+
+            case TYPE_OFFER_RECEIVED:
+                return new OfferReceivedHolder(
+                        inflater.inflate(R.layout.item_msg_offer_left, parent, false)
+                );
+
+            case TYPE_SENT:
+                return new SentHolder(
+                        inflater.inflate(R.layout.item_msg_right, parent, false)
+                );
+
+            default:
+                return new ReceivedHolder(
+                        inflater.inflate(R.layout.item_msg_left, parent, false)
+                );
         }
     }
 
+    // ============================================================
+    // BIND
+    // ============================================================
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
 
         Message m = messages.get(pos);
 
-        // -------------------------
-        // MENSAJE ENVIADO (derecha)
-        // -------------------------
+        // -------------------------------------------
+        // 🟦 OFERTA ENVIADA (derecha)
+        // -------------------------------------------
+        if (holder instanceof OfferSentHolder) {
+
+            OfferSentHolder h = (OfferSentHolder) holder;
+
+            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + "€");
+            h.txtTime.setText(formatTime(m.getTimestamp()));
+
+            switch (m.getStatus()) {
+                case "pending":
+                    h.txtStatus.setText("Pendiente…");
+                    h.txtStatus.setTextColor(0xFF888888);
+                    break;
+
+                case "accepted":
+                    h.txtStatus.setText("Aceptada ✔");
+                    h.txtStatus.setTextColor(0xFF4CAF50);
+                    break;
+
+                case "rejected":
+                    h.txtStatus.setText("Rechazada ✖");
+                    h.txtStatus.setTextColor(0xFFF44336);
+                    break;
+            }
+
+            return;
+        }
+
+        // -------------------------------------------
+        // 🟥 OFERTA RECIBIDA (izquierda)
+        // -------------------------------------------
+        if (holder instanceof OfferReceivedHolder) {
+
+            OfferReceivedHolder h = (OfferReceivedHolder) holder;
+
+            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + "€");
+            h.txtTime.setText(formatTime(m.getTimestamp()));
+
+            if ("pending".equals(m.getStatus())) {
+                h.layoutButtons.setVisibility(View.VISIBLE);
+
+                h.btnAccept.setOnClickListener(v -> {
+                    if (offerListener != null) offerListener.onAccept(m);
+                });
+
+                h.btnReject.setOnClickListener(v -> {
+                    if (offerListener != null) offerListener.onReject(m);
+                });
+
+            } else {
+                h.layoutButtons.setVisibility(View.GONE);
+            }
+
+            return;
+        }
+
+        // -------------------------------------------
+        // 🔵 MENSAJE NORMAL ENVIADO
+        // -------------------------------------------
         if (holder instanceof SentHolder) {
 
             SentHolder h = (SentHolder) holder;
@@ -78,9 +168,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             h.txtMessage.setText(m.getText());
             h.txtTime.setText(formatTime(m.getTimestamp()));
 
-            int lastSentIndex = getLastSentIndex();
+            int lastSent = getLastSentIndex();
 
-            if (pos == lastSentIndex) {
+            if (pos == lastSent) {
                 h.txtStatusText.setVisibility(View.VISIBLE);
 
                 if (m.isRead()) {
@@ -93,7 +183,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     h.txtStatusText.setText("Enviado");
                     h.txtStatusText.setTextColor(0xFF888888);
                 }
-
             } else {
                 h.txtStatusText.setVisibility(View.GONE);
             }
@@ -101,53 +190,21 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        // -------------------------
-        // MENSAJE RECIBIDO (izquierda)
-        // -------------------------
-        ReceivedHolder h = (ReceivedHolder) holder;
+        // -------------------------------------------
+        // 🔴 MENSAJE NORMAL RECIBIDO
+        // -------------------------------------------
+        if (holder instanceof ReceivedHolder) {
 
-        h.txtMessage.setText(m.getText());
-        h.txtTime.setText(formatTime(m.getTimestamp()));
+            ReceivedHolder h = (ReceivedHolder) holder;
 
-        // Por defecto no se ven los botones
-        h.layoutOfferButtons.setVisibility(View.GONE);
-
-        // ===================================================
-        // 🟧 MENSAJE DE OFERTA
-        // ===================================================
-        if ("offer".equals(m.getType())) {
-
-            boolean yoSoyComprador = m.getSenderId().equals(myUid);
-
-            if (yoSoyComprador) {
-                // Yo envié la oferta → no muestro botones
-                h.layoutOfferButtons.setVisibility(View.GONE);
-            } else {
-
-                if ("pending".equals(m.getStatus())) {
-
-                    h.layoutOfferButtons.setVisibility(View.VISIBLE);
-
-                    h.btnAcceptOffer.setOnClickListener(v -> {
-                        if (offerListener != null) offerListener.onAccept(m);
-                    });
-
-                    h.btnRejectOffer.setOnClickListener(v -> {
-                        if (offerListener != null) offerListener.onReject(m);
-                    });
-
-                } else {
-                    // Oferta ya gestionada
-                    h.layoutOfferButtons.setVisibility(View.GONE);
-                }
-            }
+            h.txtMessage.setText(m.getText());
+            h.txtTime.setText(formatTime(m.getTimestamp()));
         }
-
-        // Animación estética
-        holder.itemView.setAlpha(0f);
-        holder.itemView.animate().alpha(1f).setDuration(110).start();
     }
 
+    // ============================================================
+    // HELPERS
+    // ============================================================
     private int getLastSentIndex() {
         for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i).getSenderId().equals(myUid)) return i;
@@ -159,32 +216,58 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return new SimpleDateFormat("HH:mm").format(new Date(timestamp));
     }
 
-    // HOLDDERS =====================================
+    // ============================================================
+    // HOLDERS
+    // ============================================================
 
-    static class SentHolder extends RecyclerView.ViewHolder {
-        TextView txtMessage, txtTime, txtStatusText;
+    // --- Oferta enviada (derecha)
+    static class OfferSentHolder extends RecyclerView.ViewHolder {
+        TextView txtOffer, txtTime, txtStatus;
 
-        public SentHolder(@NonNull View item) {
-            super(item);
-            txtMessage = item.findViewById(R.id.txtMessageRight);
-            txtTime = item.findViewById(R.id.txtTimeRight);
-            txtStatusText = item.findViewById(R.id.txtStatusText);
+        public OfferSentHolder(@NonNull View v) {
+            super(v);
+            txtOffer = v.findViewById(R.id.txtOfferRight);
+            txtTime = v.findViewById(R.id.txtTimeRight);
+            txtStatus = v.findViewById(R.id.txtStatusRight);
         }
     }
 
+    // --- Oferta recibida (izquierda)
+    static class OfferReceivedHolder extends RecyclerView.ViewHolder {
+        TextView txtOffer, txtTime;
+        LinearLayout layoutButtons;
+        Button btnAccept, btnReject;
+
+        public OfferReceivedHolder(@NonNull View v) {
+            super(v);
+            txtOffer = v.findViewById(R.id.txtOfferLeft);
+            txtTime = v.findViewById(R.id.txtTimeLeft);
+            layoutButtons = v.findViewById(R.id.layoutOfferButtons);
+            btnAccept = v.findViewById(R.id.btnAcceptOffer);
+            btnReject = v.findViewById(R.id.btnRejectOffer);
+        }
+    }
+
+    // --- mensaje enviado
+    static class SentHolder extends RecyclerView.ViewHolder {
+        TextView txtMessage, txtTime, txtStatusText;
+
+        public SentHolder(@NonNull View v) {
+            super(v);
+            txtMessage = v.findViewById(R.id.txtMessageRight);
+            txtTime = v.findViewById(R.id.txtTimeRight);
+            txtStatusText = v.findViewById(R.id.txtStatusText);
+        }
+    }
+
+    // --- mensaje recibido
     static class ReceivedHolder extends RecyclerView.ViewHolder {
         TextView txtMessage, txtTime;
-        LinearLayout layoutOfferButtons;
-        Button btnAcceptOffer, btnRejectOffer;
 
-        public ReceivedHolder(@NonNull View item) {
-            super(item);
-            txtMessage = item.findViewById(R.id.txtMessageLeft);
-            txtTime = item.findViewById(R.id.txtTimeLeft);
-
-            layoutOfferButtons = item.findViewById(R.id.layoutOfferButtons);
-            btnAcceptOffer = item.findViewById(R.id.btnAcceptOffer);
-            btnRejectOffer = item.findViewById(R.id.btnRejectOffer);
+        public ReceivedHolder(@NonNull View v) {
+            super(v);
+            txtMessage = v.findViewById(R.id.txtMessageLeft);
+            txtTime = v.findViewById(R.id.txtTimeLeft);
         }
     }
 

@@ -115,7 +115,6 @@ public class ProductDetailActivity extends AppCompatActivity {
                     fillExtraData(p.getExtra());
                     loadSellerInfo(p.getUserId());
                     setupOwnerOrBuyerUI();
-                    checkPendingOffer();
                     mostrarValoracionSiSoyComprador();
                 });
     }
@@ -205,20 +204,6 @@ public class ProductDetailActivity extends AppCompatActivity {
     // ============================================================
     // ALERTA OFERTA PENDIENTE
     // ============================================================
-    private void checkPendingOffer() {
-        txtOfferAlert.setVisibility(View.GONE);
-
-        db.collection("products")
-                .document(productId)
-                .collection("offers")
-                .whereEqualTo("status", "pending")
-                .get()
-                .addOnSuccessListener(q -> {
-                    if (!q.isEmpty()) {
-                        txtOfferAlert.setVisibility(View.VISIBLE);
-                    }
-                });
-    }
 
     // ============================================================
     // EXTRA INFO
@@ -306,37 +291,40 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         String buyerId = FirebaseAuth.getInstance().getUid();
         String sellerId = currentProduct.getUserId();
+        String productId = currentProduct.getId();
 
         ChatRepository repo = new ChatRepository();
 
-        repo.findChat(buyerId, sellerId, currentProduct.getId())
+        repo.findChat(buyerId, sellerId, productId)
                 .addOnSuccessListener(q -> {
 
                     String chatId;
 
-                    if (!q.isEmpty()) chatId = q.getDocuments().get(0).getId();
-                    else {
+                    if (!q.isEmpty()) {
+                        chatId = q.getDocuments().get(0).getId();
+                    } else {
                         chatId = repo.generateId();
 
                         Map<String, Object> data = new HashMap<>();
                         data.put("id", chatId);
                         data.put("user1", buyerId);
                         data.put("user2", sellerId);
-                        data.put("productId", currentProduct.getId());
+                        data.put("productId", productId);
                         data.put("createdAt", System.currentTimeMillis());
                         data.put("participants", Arrays.asList(buyerId, sellerId));
 
                         db.collection("chats").document(chatId).set(data);
                     }
 
-                    abrirDialogoEnviarOferta(chatId, buyerId);
+                    // 👇 Pasamos sellerId y productId
+                    abrirDialogoEnviarOferta(chatId, buyerId, sellerId, productId);
                 });
     }
 
-    private void abrirDialogoEnviarOferta(String chatId, String buyerId) {
+
+    private void abrirDialogoEnviarOferta(String chatId, String buyerId, String sellerId, String productId) {
 
         View v = LayoutInflater.from(this).inflate(R.layout.dialog_offer_input, null);
-
         EditText edtOffer = v.findViewById(R.id.edtOfferPrice);
 
         new AlertDialog.Builder(this)
@@ -357,12 +345,36 @@ public class ProductDetailActivity extends AppCompatActivity {
                         return;
                     }
 
-                    new com.tzolas.camisetaswallapop.repositories.OrderRepository()
-                            .sendOffer(currentProduct.getId(), chatId, buyerId, amount)
-                            .addOnSuccessListener(aVoid ->
-                                    Toast.makeText(this, "Oferta enviada", Toast.LENGTH_SHORT).show())
+                    // 🔥 Crear mensaje tipo oferta en el chat
+                    String msgId = java.util.UUID.randomUUID().toString();
+
+                    Map<String, Object> offerMsg = new HashMap<>();
+                    offerMsg.put("id", msgId);
+                    offerMsg.put("senderId", buyerId);
+                    offerMsg.put("timestamp", System.currentTimeMillis());
+                    offerMsg.put("type", "offer");
+                    offerMsg.put("offerPrice", amount);
+                    offerMsg.put("status", "pending");
+                    offerMsg.put("delivered", false);
+                    offerMsg.put("read", false);
+
+                    db.collection("chats")
+                            .document(chatId)
+                            .collection("messages")
+                            .document(msgId)
+                            .set(offerMsg)
+                            .addOnSuccessListener(aVoid -> {
+
+                                Toast.makeText(this, "Oferta enviada", Toast.LENGTH_SHORT).show();
+
+                                // Abre el chat automáticamente
+                                openChat(chatId, sellerId, productId);
+
+                            })
                             .addOnFailureListener(e ->
-                                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                            );
+
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();

@@ -7,16 +7,18 @@ public class ChatPreview {
     private String otherUserPhoto;
     private String lastMessage;
     private long lastMessageTime;
+    private String productId;  // ⬅️ NUEVO
 
     public ChatPreview() {}
 
-    public ChatPreview(String chatId, String otherUserId, String otherUserName, String otherUserPhoto, String lastMessage, long lastMessageTime) {
+    public ChatPreview(String chatId, String otherUserId, String otherUserName, String otherUserPhoto, String lastMessage, long lastMessageTime , String productId) {
         this.chatId = chatId;
         this.otherUserId = otherUserId;
         this.otherUserName = otherUserName;
         this.otherUserPhoto = otherUserPhoto;
         this.lastMessage = lastMessage;
         this.lastMessageTime = lastMessageTime;
+        this.productId = productId;
     }
 
     public String getChatId() { return chatId; }
@@ -25,6 +27,7 @@ public class ChatPreview {
     public String getOtherUserPhoto() { return otherUserPhoto; }
     public String getLastMessage() { return lastMessage; }
     public long getLastMessageTime() { return lastMessageTime; }
+    public String getProductId() { return productId; }
 
     public void setChatId(String chatId) { this.chatId = chatId; }
     public void setOtherUserId(String otherUserId) { this.otherUserId = otherUserId; }

@@ -10,12 +10,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.tzolas.camisetaswallapop.R;
 import com.tzolas.camisetaswallapop.fragments.BuscarFragment;
 import com.tzolas.camisetaswallapop.fragments.ChatFragment;
 import com.tzolas.camisetaswallapop.fragments.HomeFragment;
 import com.tzolas.camisetaswallapop.fragments.PerfilFragment;
 import com.tzolas.camisetaswallapop.fragments.SellFragment; // ✅ IMPORTADO
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,9 +59,39 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         });
+        fixChatsWithoutParticipants();
 
 
+    }
 
+    private void fixChatsWithoutParticipants() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("chats")
+                .get()
+                .addOnSuccessListener(snap -> {
+
+                    for (var doc : snap.getDocuments()) {
+
+                        if (!doc.contains("participants")) {
+
+                            String u1 = doc.getString("user1");
+                            String u2 = doc.getString("user2");
+
+                            if (u1 != null && u2 != null) {
+                                doc.getReference().update("participants", Arrays.asList(u1, u2))
+                                        .addOnSuccessListener(v ->
+                                                Log.d("FIX_CHATS", "Arreglado chat: " + doc.getId())
+                                        )
+                                        .addOnFailureListener(e ->
+                                                Log.e("FIX_CHATS", "Error en chat: " + doc.getId(), e)
+                                        );
+                            }
+                        }
+                    }
+
+                    Log.d("FIX_CHATS", "Proceso completado");
+                });
     }
 
     // Este método centraliza la lógica de navegación según el Intent (goTo)

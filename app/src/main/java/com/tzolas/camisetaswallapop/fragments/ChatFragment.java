@@ -100,7 +100,8 @@ public class ChatFragment extends Fragment {
                                                         (name != null && !name.isEmpty()) ? name : "Usuario",
                                                         photo,
                                                         lastMsg,
-                                                        lastTime
+                                                        lastTime,
+                                                        chat.getProductId()
                                                 );
 
                                                 chatList.add(preview);

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_bubble_right_offer"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/txtOfferRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Oferta: 50€"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/txtStatusRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pendiente…"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp"
+            android:textColor="#E0E0E0" />
+
+        <TextView
+            android:id="@+id/txtTimeRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="14:22"
+            android:textSize="10sp"
+            android:layout_marginTop="3dp"
+            android:textColor="#D0D0D0"
+            android:gravity="end"/>
+    </LinearLayout>
+
+</LinearLayout>

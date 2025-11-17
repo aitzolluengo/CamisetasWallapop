@@ -37,7 +37,6 @@ public class ChatActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private EditText inputMessage;
     private ImageButton btnSend;
-    private ImageButton btnSendOffer;   // 🟣 NUEVO botón para enviar oferta
 
     private ImageView imgChatUser;
     private TextView txtChatUserName;
@@ -76,14 +75,13 @@ public class ChatActivity extends AppCompatActivity {
         listenMessages();
 
         btnSend.setOnClickListener(v -> sendMessage());
-        btnSendOffer.setOnClickListener(v -> sendOffer());   // 🟣 click oferta
+
     }
 
     private void initViews() {
         recyclerView = findViewById(R.id.recyclerMessages);
         inputMessage = findViewById(R.id.editMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnSendOffer = findViewById(R.id.btnSendOffer);  // 🟣 asegúrate de tener este id en el XML
 
         imgChatUser = findViewById(R.id.imgChatUser);
         txtChatUserName = findViewById(R.id.txtChatUserName);
@@ -253,51 +251,6 @@ public class ChatActivity extends AppCompatActivity {
     /** =========================================================
      * 🔥 ENVIAR OFERTA (PRECIO DEL PRODUCTO)
      * ========================================================= */
-    private void sendOffer() {
-
-        // No tiene sentido si no hay precio cargado aún
-        if (productPricePoints <= 0) {
-            Log.e("CHAT", "Precio de producto no cargado todavía");
-            return;
-        }
-
-        // solo si NO soy el dueño del producto
-        if (currentUserId != null && currentUserId.equals(productOwnerId)) {
-            Log.e("CHAT", "El dueño no puede auto-ofertarse");
-            return;
-        }
-
-        String msgId = UUID.randomUUID().toString();
-
-        String text = String.format(
-                Locale.getDefault(),
-                "Te ofrezco %d puntos por este producto.",
-                productPricePoints
-        );
-
-        Message offerMsg = new Message(
-                msgId,
-                currentUserId,
-                text,
-                System.currentTimeMillis()
-        );
-        offerMsg.setType("offer");
-        offerMsg.setOfferPrice(productPricePoints);
-        offerMsg.setStatus("pending");
-        offerMsg.setDelivered(false);
-        offerMsg.setRead(false);
-
-        db.collection("chats")
-                .document(chatId)
-                .collection("messages")
-                .document(msgId)
-                .set(offerMsg)
-                .addOnSuccessListener(aVoid ->
-                        Log.d("CHAT", "Oferta enviada correctamente"))
-                .addOnFailureListener(e ->
-                        Log.e("CHAT", "Error enviando oferta", e)
-                );
-    }
 
     /** =========================================================
      * ACEPTAR OFERTA: mover puntos + marcar producto vendido

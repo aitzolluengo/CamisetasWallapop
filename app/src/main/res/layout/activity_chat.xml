@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="#FAFAFB"
     android:fitsSystemWindows="true"
@@ -76,17 +77,8 @@
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/ic_send"
-            android:tint="#5D4CFF"
+            app:tint="#5D4CFF"
             android:background="@android:color/transparent" />
-        <ImageButton
-            android:id="@+id/btnSendOffer"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_local_offer"
-            android:background="@android:color/transparent"
-            android:tint="#FF8800"
-            android:contentDescription="Enviar oferta" />
 
 
     </LinearLayout>

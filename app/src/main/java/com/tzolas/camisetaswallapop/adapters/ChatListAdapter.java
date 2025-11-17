@@ -57,6 +57,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             Intent i = new Intent(context, ChatActivity.class);
             i.putExtra("chatId", chat.getChatId());
             i.putExtra("sellerId", chat.getOtherUserId());
+            i.putExtra("productId" , chat.getProductId());
             context.startActivity(i);
         });
     }
