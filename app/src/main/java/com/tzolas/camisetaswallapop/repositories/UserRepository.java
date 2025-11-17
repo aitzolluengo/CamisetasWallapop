@@ -1,6 +1,7 @@
 package com.tzolas.camisetaswallapop.repositories;
 
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -15,20 +16,28 @@ public class UserRepository {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     public Task<Void> upsertUser(User user) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("uid", user.getUid());
-        data.put("name", user.getName());
-        data.put("email", user.getEmail());
-        data.put("photo", user.getPhoto());
-        data.put("createdAt", FieldValue.serverTimestamp());
 
-        // inicializar points y spentPoints sólo si no existen (merge)
-        data.put("points", user.getPoints());      // si user.getPoints()==0 se guardará 0 en creación
-        data.put("spentPoints", user.getSpentPoints());
+        DocumentReference ref = db.collection("users").document(user.getUid());
 
-        return db.collection("users")
-                .document(user.getUid())
-                .set(data, SetOptions.merge());
+        return ref.get().continueWithTask(task -> {
+
+            DocumentSnapshot doc = task.getResult();
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("uid", user.getUid());
+            data.put("name", user.getName());
+            data.put("email", user.getEmail());
+            data.put("photo", user.getPhoto());
+            data.put("createdAt", FieldValue.serverTimestamp());
+
+            if (!doc.exists()) {
+                // 🟢 SOLO USUARIOS NUEVOS RECIBEN PUNTOS INICIALES
+                data.put("points", 100);
+                data.put("spentPoints", 0);
+            }
+
+            return ref.set(data, SetOptions.merge());
+        });
     }
 
     public Task<DocumentSnapshot> getUserById(String uid) {

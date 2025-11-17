@@ -1,5 +1,6 @@
 package com.tzolas.camisetaswallapop.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,7 +31,7 @@ public class SellerProfileActivity extends AppCompatActivity {
     private TextView txtSellerName, txtSellerEmail;
     private RecyclerView recycler;
     private ProductsAdapter adapter;
-    private List<Product> productList = new ArrayList<>();
+    private final List<Product> productList = new ArrayList<>();
     private Button btnSecurity;
 
     private SecurityRepository securityRepository;
@@ -48,20 +49,31 @@ public class SellerProfileActivity extends AppCompatActivity {
         recycler = findViewById(R.id.recyclerSellerProducts);
         btnSecurity = findViewById(R.id.btnSecurity);
 
+        // Obtener ID del vendedor
+        sellerId = getIntent().getStringExtra("sellerId");
+
+        if (sellerId == null) {
+            finish();
+            return;
+        }
+
+        // Configurar recycler
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ProductsAdapter(this, productList, product -> {
-            // Tu código existente para click en producto
+            // Abrir detalle del producto al pulsarlo
+            Intent intent = new Intent(SellerProfileActivity.this, ProductDetailActivity.class);
+            intent.putExtra("productId", product.getId());
+            startActivity(intent);
         });
         recycler.setAdapter(adapter);
-
         securityRepository = new SecurityRepository(this);
 
         sellerId = getIntent().getStringExtra("sellerId");
         sellerName = getIntent().getStringExtra("sellerName");
 
         if (sellerId != null) {
-            loadSellerInfo(sellerId);
-            loadSellerProducts(sellerId);
+            loadSellerInfo();
+            loadSellerProducts();
             configurarBotonSeguridad();
         } else {
             Toast.makeText(this, "Error: ID de vendedor no disponible", Toast.LENGTH_SHORT).show();
@@ -158,12 +170,19 @@ public class SellerProfileActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void loadSellerInfo(String sellerId) {
+    /** ===============================
+     * 🔥 Cargar datos del usuario
+     * =============================== */
+    private void loadSellerInfo() {
+
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(sellerId)
                 .get()
                 .addOnSuccessListener(doc -> {
+
+                    if (!doc.exists()) return;
+
                     String name = doc.getString("name");
                     String photo = doc.getString("photo");
                     String email = doc.getString("email");
@@ -182,17 +201,24 @@ public class SellerProfileActivity extends AppCompatActivity {
                 });
     }
 
-    private void loadSellerProducts(String sellerId) {
+    /** ===============================
+     * 🔥 Cargar productos del vendedor
+     * =============================== */
+    private void loadSellerProducts() {
+
         FirebaseFirestore.getInstance()
                 .collection("products")
                 .whereEqualTo("userId", sellerId)
                 .get()
                 .addOnSuccessListener(query -> {
+
                     productList.clear();
+
                     for (var doc : query.getDocuments()) {
                         Product p = doc.toObject(Product.class);
                         if (p != null) productList.add(p);
                     }
+
                     adapter.notifyDataSetChanged();
                 });
     }
