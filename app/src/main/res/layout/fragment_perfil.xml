@@ -168,6 +168,16 @@
                 android:layout_marginStart="6dp"/>
         </LinearLayout>
 
+        <!-- Agregar esto en tu fragment_perfil.xml donde quieras el botón -->
+        <Button
+            android:id="@+id/btnBlockedUsers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Usuarios bloqueados"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFFFFF" />
+
         <!-- LISTA EN VENTA -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerVenta"

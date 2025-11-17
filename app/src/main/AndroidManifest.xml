@@ -42,6 +42,10 @@
 
         <activity android:name=".activities.SearchResultsActivity" />
         <activity android:name=".activities.ShippingActivity" />
+        <activity android:name=".activities.BlockedUsersActivity"
+            android:label="Usuarios bloqueados"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+            android:parentActivityName=".activities.MainActivity" />
 
 
     </application>

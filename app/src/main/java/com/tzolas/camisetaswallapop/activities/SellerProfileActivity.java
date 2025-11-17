@@ -87,6 +87,14 @@ public class SellerProfileActivity extends AppCompatActivity {
             btnSecurity.setVisibility(View.GONE);
         } else {
             btnSecurity.setVisibility(View.VISIBLE);
+
+            // 🔥 VERIFICAR si ya está bloqueado para cambiar el texto
+            if (securityRepository.isUserBlocked(sellerId)) {
+                btnSecurity.setText("Usuario bloqueado - Opciones");
+            } else {
+                btnSecurity.setText("Opciones de seguridad");
+            }
+
             btnSecurity.setOnClickListener(v -> {
                 mostrarOpcionesSeguridad();
             });
@@ -94,18 +102,37 @@ public class SellerProfileActivity extends AppCompatActivity {
     }
 
     private void mostrarOpcionesSeguridad() {
-        String[] opciones = {"Bloquear usuario", "Reportar usuario"};
+        // 🔥 CAMBIAR opciones según si está bloqueado o no
+        String[] opciones;
+        if (securityRepository.isUserBlocked(sellerId)) {
+            opciones = new String[]{"Desbloquear usuario", "Reportar usuario"};
+        } else {
+            opciones = new String[]{"Bloquear usuario", "Reportar usuario"};
+        }
 
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Opciones de seguridad")
                 .setItems(opciones, (dialog, which) -> {
-                    switch (which) {
-                        case 0:
-                            mostrarDialogoBloquear();
-                            break;
-                        case 1:
-                            mostrarDialogoReportar();
-                            break;
+                    if (securityRepository.isUserBlocked(sellerId)) {
+                        // Si está bloqueado
+                        switch (which) {
+                            case 0:
+                                mostrarDialogoDesbloquear();
+                                break;
+                            case 1:
+                                mostrarDialogoReportar();
+                                break;
+                        }
+                    } else {
+                        // Si NO está bloqueado
+                        switch (which) {
+                            case 0:
+                                mostrarDialogoBloquear();
+                                break;
+                            case 1:
+                                mostrarDialogoReportar();
+                                break;
+                        }
                     }
                 })
                 .setNegativeButton("Cancelar", null)
@@ -221,5 +248,24 @@ public class SellerProfileActivity extends AppCompatActivity {
 
                     adapter.notifyDataSetChanged();
                 });
+    }
+    private void mostrarDialogoDesbloquear() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Desbloquear usuario")
+                .setMessage("¿Estás seguro de que quieres desbloquear a " + sellerName + "?\n\nPodrás:\n• Ver sus productos\n• Recibir sus mensajes\n• Ver sus publicaciones en búsquedas")
+                .setPositiveButton("Desbloquear", (dialog, which) -> {
+                    boolean exito = securityRepository.unblockUser(sellerId);
+                    if (exito) {
+                        Toast.makeText(this, "Usuario desbloqueado correctamente", Toast.LENGTH_SHORT).show();
+                        // Actualizar botón
+                        btnSecurity.setText("Opciones de seguridad");
+                        // Recargar productos (por si estaban ocultos)
+                        loadSellerProducts();
+                    } else {
+                        Toast.makeText(this, "Error al desbloquear usuario", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 }

@@ -37,6 +37,7 @@ import com.tzolas.camisetaswallapop.adapters.OffersAdapter;
 import com.tzolas.camisetaswallapop.adapters.ProductsAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
 import com.tzolas.camisetaswallapop.utils.CloudinaryUploader;
+import com.tzolas.camisetaswallapop.activities.BlockedUsersActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +52,7 @@ public class PerfilFragment extends Fragment {
     private RatingBar ratingBar;
 
     private Button btnLogout, btnEditProfile;
-    private Button btnEnVenta, btnComprados;
+    private Button btnEnVenta, btnComprados, btnBlockedUsers;
 
     private RecyclerView recyclerVenta, recyclerComprados, recyclerOffers;
 
@@ -90,10 +91,24 @@ public class PerfilFragment extends Fragment {
 
         btnEnVenta = view.findViewById(R.id.btnEnVenta);
         btnComprados = view.findViewById(R.id.btnComprados);
+        btnBlockedUsers = view.findViewById(R.id.btnBlockedUsers);
+        btnBlockedUsers.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), BlockedUsersActivity.class);
+            startActivity(intent);
+        });
+
+
 
         recyclerVenta = view.findViewById(R.id.recyclerVenta);
         recyclerComprados = view.findViewById(R.id.recyclerComprados);
         recyclerOffers = view.findViewById(R.id.recyclerOffers);
+
+        Button btnBlockedUsers = view.findViewById(R.id.btnBlockedUsers);
+
+        btnBlockedUsers.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), BlockedUsersActivity.class);
+            startActivity(intent);
+        });
 
         recyclerOffers.setLayoutManager(new LinearLayoutManager(getContext()));
 

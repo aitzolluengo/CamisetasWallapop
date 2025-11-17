@@ -80,4 +80,14 @@ public class SecurityRepository {
         }
         return filtered;
     }
+    public boolean unblockUser(String userId) {
+        try {
+            Set<String> blockedUsers = getBlockedUsers();
+            blockedUsers.remove(userId);
+            sharedPreferences.edit().putStringSet(KEY_BLOCKED_USERS, blockedUsers).apply();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
