@@ -95,7 +95,7 @@ public class OrderRepository {
         Map<String, Object> msg = new HashMap<>();
         msg.put("id", msgId);
         msg.put("senderId", buyerId);
-        msg.put("text", "Oferta de " + price + "€"); // texto visible
+        msg.put("text", "Oferta de " + price + "puntos"); // texto visible
         msg.put("timestamp", System.currentTimeMillis());
         msg.put("delivered", false);
         msg.put("read", false);

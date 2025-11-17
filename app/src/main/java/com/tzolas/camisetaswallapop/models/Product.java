@@ -16,6 +16,7 @@ public class Product {
     private double price;
     private String description;
 
+
     // 🔥 Soporta múltiples fotos
     private List<String> imageUrls = new ArrayList<>();
 

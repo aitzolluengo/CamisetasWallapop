@@ -18,7 +18,7 @@
         android:id="@+id/edtOfferPrice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Precio ofrecido (€)"
+        android:hint="Precio ofrecido (puntos)"
         android:inputType="numberDecimal"
         android:padding="12dp"
         android:background="@android:drawable/edit_text" />

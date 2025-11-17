@@ -107,7 +107,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             OfferSentHolder h = (OfferSentHolder) holder;
 
-            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + "€");
+            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + " " + "puntos");
             h.txtTime.setText(formatTime(m.getTimestamp()));
 
             switch (m.getStatus()) {
@@ -137,7 +137,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             OfferReceivedHolder h = (OfferReceivedHolder) holder;
 
-            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + "€");
+            h.txtOffer.setText("Oferta: " + m.getOfferPrice() + " " + "puntos");
             h.txtTime.setText(formatTime(m.getTimestamp()));
 
             if ("pending".equals(m.getStatus())) {

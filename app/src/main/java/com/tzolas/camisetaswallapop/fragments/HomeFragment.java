@@ -91,6 +91,24 @@ public class HomeFragment extends Fragment {
 
             fullList = products != null ? products : new ArrayList<>();
 
+            long now = System.currentTimeMillis();
+            long oneMinute = 60 * 1000;
+
+            // filtrar productos vendidos hace más de 1 minuto
+            List<Product> filtered = new ArrayList<>();
+            for (Product p : fullList) {
+                if (!p.isSold()) {
+                    filtered.add(p);
+                } else {
+                    Long soldAt = p.getSoldAt();
+                    if (soldAt != null && soldAt + oneMinute > now) {
+                        filtered.add(p); // se vendió hace menos de 1 minuto → mostrar temporalmente
+                    }
+                }
+            }
+
+            fullList = filtered;
+
             // generar lista favoritos
             favList = new ArrayList<>();
             for (Product p : fullList) {
