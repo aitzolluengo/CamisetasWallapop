@@ -53,6 +53,16 @@ public class HomeFragment extends Fragment {
         btnAll = view.findViewById(R.id.btnFilterAll);
         btnFavs = view.findViewById(R.id.btnFilterFavs);
 
+        btnAll.setOnClickListener(v -> {
+            showingFavs = false;
+            showAll();
+        });
+
+        btnFavs.setOnClickListener(v -> {
+            showingFavs = true;
+            showFavs();
+        });
+
         // Recycler
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new ProductsAdapter(requireContext(), new ArrayList<>(), product -> {

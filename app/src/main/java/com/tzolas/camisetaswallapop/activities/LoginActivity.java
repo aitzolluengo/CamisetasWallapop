@@ -67,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
         btnGoogleSignIn.setOnClickListener(v -> signInWithGoogle());
     }
 
-    @Override
+    /*@Override
     protected void onStart() {
         super.onStart();
         if (auth.getCurrentUser() != null) {
@@ -75,7 +75,7 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
-    }
+    }*/
 
     private void loginUser() {
         String email = editEmail.getText().toString().trim();

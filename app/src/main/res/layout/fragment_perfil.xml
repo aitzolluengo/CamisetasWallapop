@@ -150,7 +150,7 @@
                 android:layout_width="0dp"
                 android:layout_height="45dp"
                 android:layout_weight="1"
-                android:text="En venta / Vendidos"
+                android:text="En venta"
                 android:backgroundTint="#7A3BFF"
                 android:textColor="@android:color/white"
                 android:textAllCaps="false"
