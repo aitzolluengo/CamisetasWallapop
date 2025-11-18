@@ -26,6 +26,7 @@ import com.tzolas.camisetaswallapop.adapters.DetailImageAdapter;
 import com.tzolas.camisetaswallapop.models.Product;
 import com.tzolas.camisetaswallapop.repositories.ChatRepository;
 import com.tzolas.camisetaswallapop.repositories.UserRepository;
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -42,6 +43,8 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView title, price, description, txtSellerName, txtOfferAlert;
     private View sellerBlock;
     private Button btnChat, btnVender, btnEliminar, btnOferta, btnComprar;
+
+    private Button btnReportarProducto;
 
     private LinearLayout containerExtra;
 
@@ -78,6 +81,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnEliminar = findViewById(R.id.btnEliminar);
         btnOferta = findViewById(R.id.btnOferta);
         btnComprar = findViewById(R.id.btnComprar);
+        btnReportarProducto = findViewById(R.id.btnReportarProducto);
 
         containerExtra = findViewById(R.id.containerExtra);
 
@@ -178,6 +182,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             btnChat.setVisibility(View.GONE);
             btnOferta.setVisibility(View.GONE);
             btnComprar.setVisibility(View.GONE);
+            btnReportarProducto.setVisibility(View.GONE);
 
             btnVender.setVisibility(View.VISIBLE);
             btnEliminar.setVisibility(View.VISIBLE);
@@ -190,6 +195,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             btnChat.setVisibility(View.VISIBLE);
             btnOferta.setVisibility(View.VISIBLE);
             btnComprar.setVisibility(View.VISIBLE);
+            btnReportarProducto.setVisibility(View.VISIBLE);
             sellerBlock.setVisibility(View.VISIBLE);
 
             btnVender.setVisibility(View.GONE);
@@ -198,6 +204,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             btnChat.setOnClickListener(v -> startChat(currentProduct));
             btnOferta.setOnClickListener(v -> enviarOferta());
             btnComprar.setOnClickListener(v -> comprarProducto());
+            btnReportarProducto.setOnClickListener(v -> reportarProducto());
         }
     }
 
@@ -349,8 +356,9 @@ public class ProductDetailActivity extends AppCompatActivity {
                     }
 
                     int amount;
-                    try { amount = Integer.parseInt(t); }
-                    catch (Exception e) {
+                    try {
+                        amount = Integer.parseInt(t);
+                    } catch (Exception e) {
                         Toast.makeText(this, "Cantidad inválida", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -504,6 +512,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                             .show();
                 });
     }
+
     // ===========================
 //   EDITAR / ELIMINAR PRODUCTO
 // ===========================
@@ -515,7 +524,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         EditText edtTitle = view.findViewById(R.id.edtEditTitle);
         EditText edtPrice = view.findViewById(R.id.edtEditPrice);
-        EditText edtDesc  = view.findViewById(R.id.edtEditDescription);
+        EditText edtDesc = view.findViewById(R.id.edtEditDescription);
 
         edtTitle.setText(currentProduct.getTitle());
         edtPrice.setText(String.valueOf(currentProduct.getPrice()));
@@ -527,7 +536,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .setPositiveButton("Guardar", (dialog, which) -> {
                     String newTitle = edtTitle.getText().toString().trim();
                     String newPrice = edtPrice.getText().toString().trim();
-                    String newDesc  = edtDesc.getText().toString().trim();
+                    String newDesc = edtDesc.getText().toString().trim();
                     guardarEdicionProducto(newTitle, newPrice, newDesc);
                 })
                 .setNegativeButton("Cancelar", null)
@@ -586,6 +595,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                         Toast.makeText(this, "Error al eliminar: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
+
     // 🔥 METODO SIMPLE: Abrir perfil del vendedor
     private void abrirPerfilVendedor(String sellerId, String sellerName) {
         Intent intent = new Intent(this, SellerProfileActivity.class);
@@ -594,4 +604,113 @@ public class ProductDetailActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private void reportarProducto() {
+        String[] tiposReporte = {
+                "Producto prohibido",
+                "Información falsa",
+                "Precio incorrecto",
+                "Imágenes inapropiadas",
+                "Spam",
+                "Suplantación de identidad",
+                "Otro"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("Reportar producto")
+                .setItems(tiposReporte, (dialog, which) -> {
+                    String tipo = tiposReporte[which];
+                    mostrarDialogoDetallesReporteProducto(tipo);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void mostrarDialogoDetallesReporteProducto(String tipo) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_report_details, null);
+        EditText edtDescripcion = dialogView.findViewById(R.id.edtReportDescription);
+
+        new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setTitle("Reportar producto - " + tipo)
+                .setPositiveButton("Enviar reporte", (dialog, which) -> {
+                    String descripcion = edtDescripcion.getText().toString().trim();
+                    if (descripcion.isEmpty()) {
+                        Toast.makeText(this, "Por favor describe el problema", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    enviarReporteProducto(tipo, descripcion);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void enviarReporteProducto(String tipo, String descripcion) {
+        try {
+            String currentUserId = FirebaseAuth.getInstance().getUid();
+            if (currentUserId == null) {
+                Toast.makeText(this, "Error: Usuario no autenticado", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Obtener el nombre del vendedor
+            db.collection("users")
+                    .document(currentProduct.getUserId())
+                    .get()
+                    .addOnSuccessListener(userDoc -> {
+                        String sellerName = userDoc.getString("name");
+                        if (sellerName == null) sellerName = "Vendedor";
+
+                        // Crear el reporte
+                        Map<String, Object> report = new HashMap<>();
+                        report.put("reporterId", currentUserId);
+                        report.put("productId", currentProduct.getId());
+                        report.put("productTitle", currentProduct.getTitle());
+                        report.put("sellerId", currentProduct.getUserId());
+                        report.put("sellerName", sellerName);
+                        report.put("reportType", tipo);
+                        report.put("description", descripcion);
+                        report.put("timestamp", System.currentTimeMillis());
+                        report.put("status", "pending");
+
+                        // 🔥 USAR LA COLECCIÓN "reports" que ya existe
+                        db.collection("reports")
+                                .document()
+                                .set(report)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(this, "✅ Producto reportado correctamente", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "❌ Error al reportar producto: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Log.e("REPORT_ERROR", "Error: " + e.getMessage());
+                                });
+                    })
+                    .addOnFailureListener(e -> {
+                        // Si falla obtener el usuario, enviar reporte sin nombre
+                        Map<String, Object> report = new HashMap<>();
+                        report.put("reporterId", currentUserId);
+                        report.put("productId", currentProduct.getId());
+                        report.put("productTitle", currentProduct.getTitle());
+                        report.put("sellerId", currentProduct.getUserId());
+                        report.put("reportType", tipo);
+                        report.put("description", descripcion);
+                        report.put("timestamp", System.currentTimeMillis());
+                        report.put("status", "pending");
+
+                        db.collection("reports")
+                                .document()
+                                .set(report)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(this, "✅ Producto reportado correctamente", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e2 -> {
+                                    Toast.makeText(this, "❌ Error al reportar: " + e2.getMessage(), Toast.LENGTH_LONG).show();
+                                });
+                    });
+
+        } catch (Exception e) {
+            Toast.makeText(this, "❌ Error inesperado: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("REPORT_ERROR", "Exception: " + e.getMessage());
+        }
+    }
 }

@@ -192,6 +192,17 @@
             android:layout_marginTop="12dp"
             android:visibility="visible"/>
 
+        <Button
+            android:id="@+id/btnReportarProducto"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Reportar producto"
+            android:textAllCaps="false"
+            android:backgroundTint="#FF5722"
+            android:textColor="#FFF"
+            android:layout_marginTop="12dp"
+            android:visibility="visible"/>
+
         <!-- BOTONES VENDEDOR -->
         <Button
             android:id="@+id/btnVender"
