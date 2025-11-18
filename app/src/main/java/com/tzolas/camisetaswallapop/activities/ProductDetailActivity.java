@@ -97,9 +97,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         loadProduct(productId);
     }
 
-    // ============================================================
     // CARGAR PRODUCTO
-    // ============================================================
     private void loadProduct(String productId) {
         db.collection("products").document(productId)
                 .get()
@@ -123,9 +121,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 });
     }
 
-    // ============================================================
     // SLIDER IMÁGENES
-    // ============================================================
     private void setupImageSlider(java.util.List<String> urls) {
         if (urls == null || urls.isEmpty()) return;
 
@@ -170,9 +166,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    // ============================================================
     // UI DUEÑO / COMPRADOR
-    // ============================================================
     private void setupOwnerOrBuyerUI() {
         String uid = FirebaseAuth.getInstance().getUid();
 
@@ -208,13 +202,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    // ============================================================
-    // ALERTA OFERTA PENDIENTE
-    // ============================================================
 
-    // ============================================================
-    // EXTRA INFO
-    // ============================================================
     private void fillExtraData(Map<String, Object> extra) {
         if (extra == null) return;
 
@@ -237,9 +225,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    // ============================================================
-    // VENDEDOR
-    // ============================================================
+    //VENDEDOR
     private void loadSellerInfo(String sellerId) {
         new UserRepository()
                 .getUserById(sellerId)
@@ -258,9 +244,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 });
     }
 
-    // ============================================================
-    // CHAT
-    // ============================================================
+    //CHAT
     private void startChat(Product p) {
         String buyerId = FirebaseAuth.getInstance().getUid();
         String sellerId = p.getUserId();
@@ -301,9 +285,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    // ============================================================
-    // OFERTA
-    // ============================================================
+    //OFERTA
     private void enviarOferta() {
 
         String buyerId = FirebaseAuth.getInstance().getUid();
@@ -363,7 +345,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // 🔥 Crear mensaje tipo oferta en el chat
+                    // Crear mensaje tipo oferta en el chat
                     String msgId = java.util.UUID.randomUUID().toString();
 
                     Map<String, Object> offerMsg = new HashMap<>();
@@ -398,9 +380,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .show();
     }
 
-    // ============================================================
     // VALORACIÓN
-    // ============================================================
     private void mostrarValoracionSiSoyComprador() {
 
         String uid = FirebaseAuth.getInstance().getUid();
@@ -470,9 +450,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 });
     }
 
-    // ============================================================
-    // COMPRAR DIRECTO
-    // ============================================================
+    //  COMPRAR DIRECTO
     private void comprarProducto() {
 
         String buyerId = FirebaseAuth.getInstance().getUid();
@@ -513,9 +491,9 @@ public class ProductDetailActivity extends AppCompatActivity {
                 });
     }
 
-    // ===========================
+
 //   EDITAR / ELIMINAR PRODUCTO
-// ===========================
+
     private void abrirDialogoEditarProducto() {
         if (currentProduct == null) return;
 
@@ -596,7 +574,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                 );
     }
 
-    // 🔥 METODO SIMPLE: Abrir perfil del vendedor
+
     private void abrirPerfilVendedor(String sellerId, String sellerName) {
         Intent intent = new Intent(this, SellerProfileActivity.class);
         intent.putExtra("sellerId", sellerId);
@@ -678,10 +656,10 @@ public class ProductDetailActivity extends AppCompatActivity {
                                 .document()
                                 .set(report)
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "✅ Producto reportado correctamente", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, " Producto reportado correctamente", Toast.LENGTH_SHORT).show();
                                 })
                                 .addOnFailureListener(e -> {
-                                    Toast.makeText(this, "❌ Error al reportar producto: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(this, " Error al reportar producto: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                     Log.e("REPORT_ERROR", "Error: " + e.getMessage());
                                 });
                     })
@@ -701,15 +679,15 @@ public class ProductDetailActivity extends AppCompatActivity {
                                 .document()
                                 .set(report)
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "✅ Producto reportado correctamente", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, " Producto reportado correctamente", Toast.LENGTH_SHORT).show();
                                 })
                                 .addOnFailureListener(e2 -> {
-                                    Toast.makeText(this, "❌ Error al reportar: " + e2.getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(this, " Error al reportar: " + e2.getMessage(), Toast.LENGTH_LONG).show();
                                 });
                     });
 
         } catch (Exception e) {
-            Toast.makeText(this, "❌ Error inesperado: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, " Error inesperado: " + e.getMessage(), Toast.LENGTH_LONG).show();
             Log.e("REPORT_ERROR", "Exception: " + e.getMessage());
         }
     }

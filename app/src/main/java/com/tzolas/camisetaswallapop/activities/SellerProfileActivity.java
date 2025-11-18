@@ -88,7 +88,6 @@ public class SellerProfileActivity extends AppCompatActivity {
         } else {
             btnSecurity.setVisibility(View.VISIBLE);
 
-            // 🔥 VERIFICAR si ya está bloqueado para cambiar el texto
             if (securityRepository.isUserBlocked(sellerId)) {
                 btnSecurity.setText("Usuario bloqueado - Opciones");
             } else {
@@ -102,7 +101,6 @@ public class SellerProfileActivity extends AppCompatActivity {
     }
 
     private void mostrarOpcionesSeguridad() {
-        // 🔥 CAMBIAR opciones según si está bloqueado o no
         String[] opciones;
         if (securityRepository.isUserBlocked(sellerId)) {
             opciones = new String[]{"Desbloquear usuario", "Reportar usuario"};
@@ -197,9 +195,7 @@ public class SellerProfileActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** ===============================
-     * 🔥 Cargar datos del usuario
-     * =============================== */
+    // Cargar datos del usuario
     private void loadSellerInfo() {
 
         FirebaseFirestore.getInstance()
@@ -228,9 +224,7 @@ public class SellerProfileActivity extends AppCompatActivity {
                 });
     }
 
-    /** ===============================
-     * 🔥 Cargar productos del vendedor
-     * =============================== */
+    // Cargar productos del vendedor
     private void loadSellerProducts() {
 
         FirebaseFirestore.getInstance()

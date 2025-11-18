@@ -8,7 +8,7 @@ public class ChatPreview {
     private String lastMessage;
     private long lastMessageTime;
     private String productId;
-    private int unreadCount;// ⬅️ NUEVO
+    private int unreadCount;
 
     public ChatPreview() {}
 

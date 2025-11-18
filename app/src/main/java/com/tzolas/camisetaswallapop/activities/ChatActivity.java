@@ -51,7 +51,7 @@ public class ChatActivity extends AppCompatActivity {
     private ListenerRegistration messagesListener;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    // 🟣 Info del producto para oferta
+    // Info del producto para oferta
     private int productPricePoints = 0;   // precio en puntos
     private String productOwnerId;        // dueño del producto (por seguridad)
 
@@ -73,9 +73,9 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
 
-                markAllAsReadBeforeExit();   // 🔥 1. Marca como leído al instante
-                setResult(RESULT_OK);        // 🔥 2. Informa al fragment
-                finish();                    // 🔥 3. Cierra chat
+                markAllAsReadBeforeExit();   // 1. Marca como leído al instante
+                setResult(RESULT_OK);        // 2. Informa al fragment
+                finish();                    // 3. Cierra chat
             }
         });
 
@@ -84,7 +84,7 @@ public class ChatActivity extends AppCompatActivity {
         initViews();
         setupRecycler();
         loadChatUserInfo();
-        loadProductInfoForChat(); // 🟣 cargamos precio + owner
+        loadProductInfoForChat(); // cargamos precio + owner
         listenMessages();
 
         btnSend.setOnClickListener(v -> sendMessage());
@@ -100,9 +100,7 @@ public class ChatActivity extends AppCompatActivity {
         txtChatUserName = findViewById(R.id.txtChatUserName);
     }
 
-    /** =========================================================
-     * CONFIG LISTA
-     * ========================================================= */
+    //CONFIG LISTA
     private void setupRecycler() {
         adapter = new MessageAdapter(
                 messageList,
@@ -144,9 +142,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    /** =========================================================
-     * CARGAR DATOS DEL USUARIO DEL CHAT
-     * ========================================================= */
+    //CARGAR DATOS DEL USUARIO DEL CHAT
     private void loadChatUserInfo() {
         if (sellerId == null) return;
 
@@ -164,9 +160,7 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-    /** =========================================================
-     * CARGAR INFO DEL PRODUCTO: PRECIO EN PUNTOS
-     * ========================================================= */
+    // CARGAR INFO DEL PRODUCTO: PRECIO EN PUNTOS
     private void loadProductInfoForChat() {
         db.collection("products")
                 .document(productId)
@@ -178,15 +172,13 @@ public class ChatActivity extends AppCompatActivity {
 
                     Double price = doc.getDouble("price");
                     if (price != null) {
-                        // asumiendo que 1€ = 1 punto, o ya son puntos directamente
+                        // asumiendo que 1€ = 1 punto
                         productPricePoints = (int) Math.round(price);
                     }
                 });
     }
 
-    /** =========================================================
-     * 🔥 ESCUCHAR MENSAJES
-     * ========================================================= */
+    // ESCUCHAR MENSAJES
     private void listenMessages() {
 
         messagesListener = db.collection("chats")
@@ -215,14 +207,12 @@ public class ChatActivity extends AppCompatActivity {
                         recyclerView.scrollToPosition(messageList.size() - 1);
                     }
 
-                    // 🔥 ACTUALIZAR EN TIEMPO REAL
+                    // ACTUALIZAR EN TIEMPO REAL
                     sendBroadcast(new Intent("CHAT_UPDATED"));
                 });
     }
 
-    /** =========================================================
-     * 🔥 ACTUALIZAR ESTADOS (ENTREGADO / LEÍDO)
-     * ========================================================= */
+    //ACTUALIZAR ESTADOS (ENTREGADO / LEÍDO)
     private void markStates() {
 
         for (Message msg : messageList) {
@@ -248,9 +238,7 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    /** =========================================================
-     * 🔥 ENVIAR MENSAJE NORMAL
-     * ========================================================= */
+    //ENVIAR MENSAJE NORMAL
     private void sendMessage() {
 
         String txt = inputMessage.getText().toString().trim();
@@ -280,13 +268,9 @@ public class ChatActivity extends AppCompatActivity {
                 );
     }
 
-    /** =========================================================
-     * 🔥 ENVIAR OFERTA (PRECIO DEL PRODUCTO)
-     * ========================================================= */
+    //ENVIAR OFERTA (PRECIO DEL PRODUCTO)
 
-    /** =========================================================
-     * ACEPTAR OFERTA: mover puntos + marcar producto vendido
-     * ========================================================= */
+    //ACEPTAR OFERTA: mover puntos + marcar producto vendido
     private void aceptarOferta(Message m) {
 
         if (m == null || !"offer".equals(m.getType())) return;
@@ -362,9 +346,7 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    /** =========================================================
-     * RECHAZAR OFERTA
-     * ========================================================= */
+    //RECHAZAR OFERTA
     private void rechazarOferta(Message m) {
 
         if (m == null || !"offer".equals(m.getType())) return;
@@ -382,9 +364,7 @@ public class ChatActivity extends AppCompatActivity {
                 );
     }
 
-    /** =========================================================
-     * Enviar mensaje del sistema al chat
-     * ========================================================= */
+    //Enviar mensaje del sistema al chat
     private void enviarMensajeSistema(String texto) {
 
         String newId = UUID.randomUUID().toString();
@@ -407,9 +387,7 @@ public class ChatActivity extends AppCompatActivity {
                 .set(sys);
     }
 
-    /** =========================================================
-     * LIMPIAR LISTENERS
-     * ========================================================= */
+    //LIMPIAR LISTENERS
     @Override
     protected void onDestroy() {
         super.onDestroy();

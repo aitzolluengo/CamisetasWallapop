@@ -147,9 +147,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    /**
-     * ✅ Guarda / actualiza el usuario en Firestore
-     */
+    //Guarda / actualiza el usuario en Firestore
     private void upsertUserToFirestore(FirebaseUser fu) {
         if (fu == null) return;
 

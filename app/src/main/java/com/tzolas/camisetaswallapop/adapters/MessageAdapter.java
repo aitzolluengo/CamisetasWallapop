@@ -21,8 +21,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
-    private static final int TYPE_OFFER_SENT = 10;     // 🔵 oferta enviada derecha
-    private static final int TYPE_OFFER_RECEIVED = 11; // 🔴 oferta recibida izquierda
+    private static final int TYPE_OFFER_SENT = 10;     //  oferta enviada derecha
+    private static final int TYPE_OFFER_RECEIVED = 11; //  oferta recibida izquierda
 
     private final List<Message> messages;
     private final String myUid;
@@ -41,9 +41,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.offerListener = listener;
     }
 
-    // ============================================================
     // TIPOS DE VISTA
-    // ============================================================
     @Override
     public int getItemViewType(int position) {
         Message m = messages.get(position);
@@ -59,9 +57,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return m.getSenderId().equals(myUid) ? TYPE_SENT : TYPE_RECEIVED;
     }
 
-    // ============================================================
     // CREAR VISTA
-    // ============================================================
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
@@ -92,17 +88,13 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    // ============================================================
     // BIND
-    // ============================================================
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
 
         Message m = messages.get(pos);
 
-        // -------------------------------------------
-        // 🟦 OFERTA ENVIADA (derecha)
-        // -------------------------------------------
+        //  OFERTA ENVIADA (derecha)
         if (holder instanceof OfferSentHolder) {
 
             OfferSentHolder h = (OfferSentHolder) holder;
@@ -130,9 +122,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        // -------------------------------------------
-        // 🟥 OFERTA RECIBIDA (izquierda)
-        // -------------------------------------------
+        // OFERTA RECIBIDA (izquierda)
         if (holder instanceof OfferReceivedHolder) {
 
             OfferReceivedHolder h = (OfferReceivedHolder) holder;
@@ -158,9 +148,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        // -------------------------------------------
-        // 🔵 MENSAJE NORMAL ENVIADO
-        // -------------------------------------------
+        //  MENSAJE NORMAL ENVIADO
         if (holder instanceof SentHolder) {
 
             SentHolder h = (SentHolder) holder;
@@ -190,9 +178,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
-        // -------------------------------------------
-        // 🔴 MENSAJE NORMAL RECIBIDO
-        // -------------------------------------------
+        //  MENSAJE NORMAL RECIBIDO
         if (holder instanceof ReceivedHolder) {
 
             ReceivedHolder h = (ReceivedHolder) holder;
@@ -202,9 +188,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    // ============================================================
     // HELPERS
-    // ============================================================
     private int getLastSentIndex() {
         for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i).getSenderId().equals(myUid)) return i;
@@ -216,11 +200,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return new SimpleDateFormat("HH:mm").format(new Date(timestamp));
     }
 
-    // ============================================================
     // HOLDERS
-    // ============================================================
 
-    // --- Oferta enviada (derecha)
     static class OfferSentHolder extends RecyclerView.ViewHolder {
         TextView txtOffer, txtTime, txtStatus;
 

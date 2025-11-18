@@ -50,7 +50,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.PhotoViewHol
                 .centerCrop()
                 .into(holder.image);
 
-        // ⭐ principal → si es posición 0, icono en dorado
+        //  principal -> si es posición 0, icono en dorado
         if (position == 0) {
             holder.btnStar.setImageResource(R.drawable.ic_star_filled);
         } else {

@@ -17,7 +17,6 @@ public class Product {
     private String description;
 
 
-    // 🔥 Soporta múltiples fotos
     private List<String> imageUrls = new ArrayList<>();
 
     private String userId;
@@ -36,7 +35,6 @@ public class Product {
     private String postalCode;
     private String phone;
 
-    // 🔴 Firestore exige constructor vacío
     public Product() {}
 
     // Constructor principal
@@ -61,9 +59,8 @@ public class Product {
         this.imageUrls = new ArrayList<>();
     }
 
-    // ------------------------------------
     //           GETTERS / SETTERS
-    // ------------------------------------
+
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -86,7 +83,7 @@ public class Product {
         this.imageUrls = (imageUrls == null) ? new ArrayList<>() : imageUrls;
     }
 
-    // 🔥 FIX: Firestore enviaba "imageUrl"
+
     // Este setter convierte imageUrl -> imageUrls automáticamente
     public void setImageUrl(String url) {
         if (url != null && !url.isEmpty()) {

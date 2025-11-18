@@ -33,7 +33,7 @@ public class HomeViewModel extends ViewModel {
     private void loadAllProducts() {
 
         if (myUid != null) {
-            // 1️⃣ Cargar favoritos del usuario actual
+            // Cargar favoritos del usuario actual
             db.collection("users")
                     .document(myUid)
                     .collection("favorites")
@@ -48,14 +48,11 @@ public class HomeViewModel extends ViewModel {
                     .addOnFailureListener(e -> loadProductsWithFavorites(new HashSet<>()));
 
         } else {
-            // Usuario NO logueado
             loadProductsWithFavorites(new HashSet<>());
         }
     }
 
-    // ------------------------------------------------------
     // CARGA COMPLETA DE PRODUCTOS + MARCAR FAVORITOS
-    // ------------------------------------------------------
     private void loadProductsWithFavorites(Set<String> favoriteIds) {
 
         db.collection("products")
@@ -69,10 +66,8 @@ public class HomeViewModel extends ViewModel {
                         Product p = doc.toObject(Product.class);
                         if (p == null) return;
 
-                        // Siempre asegurar ID
                         p.setId(doc.getId());
 
-                        // ⭐ Compatibilidad con productos antiguos (imageUrl único)
                         if ((p.getImageUrls() == null || p.getImageUrls().isEmpty())
                                 && doc.contains("imageUrl")) {
 
@@ -84,12 +79,10 @@ public class HomeViewModel extends ViewModel {
                             }
                         }
 
-                        // Evitar crashes por null en lista
                         if (p.getImageUrls() == null) {
                             p.setImageUrls(new ArrayList<>());
                         }
 
-                        // ❤️ Marcar como favorito
                         p.setFavorite(favoriteIds.contains(p.getId()));
 
                         // Opcional: Ocultar mis productos del Home

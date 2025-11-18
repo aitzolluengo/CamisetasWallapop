@@ -177,9 +177,7 @@ public class PerfilFragment extends Fragment {
         if (user != null) cargarOfertasRecibidas(user.getUid());
     }
 
-    /** ================================
-     *   DATOS DEL USUARIO
-     * ================================ */
+    //DATOS DEL USUARIO
     private void mostrarDatosUsuario(FirebaseUser firebaseUser) {
         tvName.setText(firebaseUser.getDisplayName() != null ? firebaseUser.getDisplayName() : "Sin nombre");
         tvEmail.setText(firebaseUser.getEmail());
@@ -190,9 +188,7 @@ public class PerfilFragment extends Fragment {
                 .circleCrop()
                 .into(ivProfilePhoto);
 
-        // ============================
-        // 🔥 Cargar puntos en tiempo real
-        // ============================
+        //  Cargar puntos en tiempo real
 
         db.collection("users")
                 .document(firebaseUser.getUid())
@@ -216,9 +212,7 @@ public class PerfilFragment extends Fragment {
     }
 
 
-    /** ================================
-     * 🔥 RATING EN TIEMPO REAL
-     * ================================ */
+    //ATING EN TIEMPO REAL
     private void cargarRatingUsuario(String uid) {
 
         if (ratingListener != null) ratingListener.remove();
@@ -243,14 +237,10 @@ public class PerfilFragment extends Fragment {
                 });
     }
 
-    /** ================================
-     *   PRODUCTOS EN VENTA / COMPRADOS
-     * ================================ */
+
     private void cargarProductosVentaYComprados(String uid) {
 
-        // ===============================
-        // 🔥 Cargar productos EN VENTA
-        // ===============================
+
         db.collection("products")
                 .whereEqualTo("userId", uid)
                 .whereEqualTo("sold", false)
@@ -270,9 +260,7 @@ public class PerfilFragment extends Fragment {
                     ventaAdapter.notifyDataSetChanged();
                 });
 
-        // ===============================
-        // 🔥 Cargar productos COMPRADOS
-        // ===============================
+
         db.collection("products")
                 .whereEqualTo("buyerId", uid)
                 .get()
@@ -307,9 +295,7 @@ public class PerfilFragment extends Fragment {
         recyclerComprados.setVisibility(View.VISIBLE);
     }
 
-    /** ================================
-     * FOTO
-     * ================================ */
+    // FOTO
     private void abrirGaleria() {
         Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(pick, PICK_IMAGE);
@@ -332,9 +318,7 @@ public class PerfilFragment extends Fragment {
     }
 
 
-    /** ================================
-     * EDITAR PERFIL
-     * ================================ */
+    //EDITAR PERFIL
     private void mostrarOpcionesEditarPerfil() {
 
         String[] opciones = {"Cambiar foto", "Cambiar nombre"};
@@ -389,9 +373,7 @@ public class PerfilFragment extends Fragment {
         });
     }
 
-    /** ================================
-     * OFERTAS RECIBIDAS
-     * ================================ */
+    // OFERTAS RECIBIDAS
     private void cargarOfertasRecibidas(String sellerId) {
 
         txtOffersTitle.setVisibility(View.GONE);
@@ -462,7 +444,7 @@ public class PerfilFragment extends Fragment {
                 String uid = FirebaseAuth.getInstance().getUid();
                 if (uid == null) return;
 
-                // 1️⃣ Guardar en FirebaseAuth
+                // 1Guardar en FirebaseAuth
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
                     user.updateProfile(
@@ -472,13 +454,13 @@ public class PerfilFragment extends Fragment {
                     );
                 }
 
-                // 2️⃣ Guardar en Firestore
+                // Guardar en Firestore
                 FirebaseFirestore.getInstance()
                         .collection("users")
                         .document(uid)
                         .update("photo", url);
 
-                // 3️⃣ Mostrar en pantalla
+                //Mostrar en pantalla
                 requireActivity().runOnUiThread(() -> {
                     Glide.with(this)
                             .load(url)

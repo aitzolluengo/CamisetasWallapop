@@ -46,15 +46,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
         int unread = chat.getUnreadCount();
         boolean hasUnread = unread > 0;
 
-        // --------------------
-        // 📌 NOMBRE
-        // --------------------
+        //  NOMBRE
         holder.txtName.setText(chat.getOtherUserName());
         holder.txtName.setTypeface(null, hasUnread ? Typeface.BOLD : Typeface.NORMAL);
 
-        // --------------------
-        // 📌 ÚLTIMO MENSAJE
-        // --------------------
+        //
+        //  ÚLTIMO MENSAJE
+
         if (chat.getLastMessage() != null) {
             holder.txtLastMessage.setText(chat.getLastMessage());
         } else {
@@ -62,9 +60,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
         }
         holder.txtLastMessage.setTypeface(null, hasUnread ? Typeface.BOLD : Typeface.NORMAL);
 
-        // --------------------
-        // 📌 HORA
-        // --------------------
+        // HORA
         if (chat.getLastMessageTime() > 0) {
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
             holder.txtTime.setText(sdf.format(new Date(chat.getLastMessageTime())));
@@ -72,18 +68,14 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             holder.txtTime.setText("");
         }
 
-        // --------------------
-        // 📌 FOTO
-        // --------------------
+        //  FOTO
         Glide.with(context)
                 .load(chat.getOtherUserPhoto())
                 .placeholder(R.drawable.ic_user_placeholder)
                 .circleCrop()
                 .into(holder.imgUser);
 
-        // --------------------
-        // 📌 BADGE DE MENSAJES SIN LEER
-        // --------------------
+        //  BADGE DE MENSAJES SIN LEER
         if (hasUnread) {
             holder.txtUnreadBadge.setVisibility(View.VISIBLE);
             holder.txtUnreadBadge.setText(String.valueOf(unread));
@@ -91,9 +83,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             holder.txtUnreadBadge.setVisibility(View.GONE);
         }
 
-        // --------------------
-        // 📌 CLICK → ABRIR CHAT
-        // --------------------
+
         holder.itemView.setOnClickListener(v -> {
             Intent i = new Intent(context, ChatActivity.class);
             i.putExtra("chatId", chat.getChatId());
@@ -102,9 +92,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             context.startActivity(i);
         });
 
-        // --------------------
-        // ✨ ANIMACIÓN SUAVE
-        // --------------------
+
         holder.itemView.setAlpha(0f);
         holder.itemView.animate().alpha(1f).setDuration(150).start();
     }

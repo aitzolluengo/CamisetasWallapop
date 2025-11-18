@@ -36,11 +36,9 @@ public class CloudinaryUploader {
             InputStream inputStream = context.getContentResolver().openInputStream(uri);
             if (inputStream == null) return null;
 
-            // 👇 Decodifica como Bitmap
             Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
             if (bitmap == null) return null;
 
-            // 👇 COMPRESIÓN 85%
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos);
 
@@ -64,7 +62,7 @@ public class CloudinaryUploader {
             Response response = client.newCall(request).execute();
             String raw = response.body().string();
 
-            System.out.println("🌐 CLOUDINARY → " + raw);
+            System.out.println(" CLOUDINARY → " + raw);
 
             if (!response.isSuccessful()) return null;
 

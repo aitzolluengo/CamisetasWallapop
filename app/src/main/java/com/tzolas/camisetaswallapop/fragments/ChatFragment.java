@@ -60,9 +60,6 @@ public class ChatFragment extends Fragment {
         return v;
     }
 
-    // =====================================================================
-    // 🔥 1) Listener en TIEMPO REAL para todos los chats
-    // =====================================================================
     private void listenChatsRealtime() {
 
         if (myUid == null) return;
@@ -87,15 +84,12 @@ public class ChatFragment extends Fragment {
                 });
     }
 
-    // =====================================================================
-    // 🔥 2) Cargar info de PREVIEW para cada chat
-    // =====================================================================
+
     private void loadChatPreview(Chat chat) {
 
         String chatId = chat.getId();
         String otherUid = chat.getUser1().equals(myUid) ? chat.getUser2() : chat.getUser1();
 
-        // 🔥 VERIFICAR si el usuario está bloqueado
         if (securityRepository.isUserBlocked(otherUid)) {
             return; // No cargar chat de usuario bloqueado
         }
@@ -122,9 +116,7 @@ public class ChatFragment extends Fragment {
                 });
     }
 
-    // =====================================================================
-    // 🔥 3) Escuchar el ÚLTIMO mensaje en tiempo real
-    // =====================================================================
+
     private void listenLastMessageRealtime(ChatPreview preview) {
 
         db.collection("chats")
@@ -152,9 +144,6 @@ public class ChatFragment extends Fragment {
                 });
     }
 
-    // =====================================================================
-    // 🔥 4) Escuchar número de mensajes sin leer en tiempo real
-    // =====================================================================
     private void listenUnreadRealtime(ChatPreview preview) {
 
         // Si ya existe listener, eliminamos antes
@@ -184,9 +173,7 @@ public class ChatFragment extends Fragment {
         messageListeners.put(preview.getChatId(), listener);
     }
 
-    // =====================================================================
-    // 🔥 Refrescar UI + badge
-    // =====================================================================
+
     private void refreshList() {
 
         // ordenar por último mensaje
@@ -196,9 +183,7 @@ public class ChatFragment extends Fragment {
         updateBottomBadge();
     }
 
-    // =====================================================================
-    // 🔥 Actualización del badge del menú inferior en tiempo real
-    // =====================================================================
+
     private void updateBottomBadge() {
 
         int totalUnread = 0;
@@ -221,9 +206,7 @@ public class ChatFragment extends Fragment {
         }
     }
 
-    // =====================================================================
-    // 🔥 Eliminar listeners al cerrar fragment
-    // =====================================================================
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();

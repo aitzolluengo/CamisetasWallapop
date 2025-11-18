@@ -14,10 +14,8 @@ public class ChatRepository {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    /**
-     * ✅ Busca si ya existe un chat entre dos usuarios para un mismo producto
-     * (sin importar quién es user1 o user2).
-     */
+    // Busca si ya existe un chat entre dos usuarios para un mismo producto(sin importar quién es user1 o user2).
+
     public Task<QuerySnapshot> findChat(String user1, String user2, String productId) {
         return db.collection("chats")
                 .whereEqualTo("productId", productId)
@@ -45,7 +43,7 @@ public class ChatRepository {
                 });
     }
 
-    /** ✅ Crear nuevo chat con lista de participantes */
+    // Crear nuevo chat con lista de participantes
     public Task<Void> createChat(Chat chat) {
         // Aseguramos que tenga campo participants
         Map<String, Object> data = new HashMap<>();
@@ -61,14 +59,14 @@ public class ChatRepository {
                 .set(data);
     }
 
-    /** ✅ Obtener todos los chats donde participe un usuario */
+    //Obtener todos los chats donde participe un usuario
     public Task<QuerySnapshot> getChatsForUser(String uid) {
         return db.collection("chats")
                 .whereArrayContains("participants", uid)
                 .get();
     }
 
-    /** ✅ Generar ID aleatorio */
+    // Generar ID aleatorio
     public String generateId() {
         return UUID.randomUUID().toString();
     }

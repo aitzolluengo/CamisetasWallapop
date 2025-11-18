@@ -16,36 +16,28 @@ public class ProductRepository {
         db = FirebaseFirestore.getInstance();
     }
 
-    /** =====================================================
-     *  SUBIR PRODUCTO (crear)
-     * ===================================================== */
+    //SUBIR PRODUCTO (crear)
     public Task<Void> uploadProduct(Product product) {
         return db.collection("products")
                 .document(product.getId())
                 .set(product);
     }
 
-    /** =====================================================
-     *  ACTUALIZAR PRODUCTO (editar)
-     * ===================================================== */
+    //ACTUALIZAR PRODUCTO (editar)
     public Task<Void> updateProduct(String productId, Map<String, Object> updates) {
         return db.collection("products")
                 .document(productId)
                 .update(updates);
     }
 
-    /** =====================================================
-     *  ELIMINAR PRODUCTO
-     * ===================================================== */
+    // ELIMINAR PRODUCTO
     public Task<Void> deleteProduct(String productId) {
         return db.collection("products")
                 .document(productId)
                 .delete();
     }
 
-    /** =====================================================
-     *  OBTENER TODOS LOS PRODUCTOS
-     * ===================================================== */
+    // OBTENER TODOS LOS PRODUCTOS
     public Task<QuerySnapshot> getProducts() {
         return db.collection("products")
                 .whereEqualTo("sold", false)
@@ -54,9 +46,7 @@ public class ProductRepository {
     }
 
 
-    /** =====================================================
-     *  OBTENER PRODUCTOS RECIENTES (FEED)
-     * ===================================================== */
+    //OBTENER PRODUCTOS RECIENTES (FEED)
     public Task<QuerySnapshot> getLatestProducts(int limit) {
         return db.collection("products")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -64,9 +54,7 @@ public class ProductRepository {
                 .get();
     }
 
-    /** =====================================================
-     *  PRODUCTOS POR USUARIO (perfil vendedor)
-     * ===================================================== */
+    //PRODUCTOS POR USUARIO (perfil vendedor)
     public Task<QuerySnapshot> getProductsByUser(String userId) {
         return db.collection("products")
                 .whereEqualTo("userId", userId)
@@ -74,9 +62,7 @@ public class ProductRepository {
                 .get();
     }
 
-    /** =====================================================
-     *  BÚSQUEDA (listo para filtros)
-     * ===================================================== */
+    // BÚSQUEDA (listo para filtros)
     public Task<QuerySnapshot> searchProducts(String title) {
         return db.collection("products")
                 .orderBy("title")

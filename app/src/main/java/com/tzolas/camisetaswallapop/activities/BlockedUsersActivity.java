@@ -40,7 +40,7 @@ public class BlockedUsersActivity extends AppCompatActivity {
             loadBlockedUsers();
             Toast.makeText(this, "Usuario desbloqueado", Toast.LENGTH_SHORT).show();
 
-            // 🔥 NUEVO: Notificar que se desbloqueó un usuario
+            // NUEVO: Notificar que se desbloqueó un usuario
             Intent broadcastIntent = new Intent("USER_UNBLOCKED");
             sendBroadcast(broadcastIntent);
         });

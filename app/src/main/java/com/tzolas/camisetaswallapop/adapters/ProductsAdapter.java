@@ -33,9 +33,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
     private final String myUid = FirebaseAuth.getInstance().getUid();
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    // -------------------------
     // Callbacks
-    // -------------------------
     public interface OnItemClickListener {
         void onItemClick(Product product);
     }
@@ -51,16 +49,14 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         this.favListener = listener;
     }
 
-    // -------------------------
     // Constructor
-    // -------------------------
     public ProductsAdapter(Context context, List<Product> products, OnItemClickListener listener) {
         this.context = context;
         this.products = products != null ? products : new ArrayList<>();
         this.listener = listener;
     }
 
-    // ✅ actualizar productos desde fuera (SearchResultsActivity y Home)
+    //  actualizar productos desde fuera (SearchResultsActivity y Home)
     public void updateProducts(List<Product> newList) {
         this.products = newList != null ? newList : new ArrayList<>();
         notifyDataSetChanged();
@@ -82,9 +78,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
         h.title.setText(p.getTitle());
         h.price.setText(p.getPrice() + "pts");
 
-        // -------------------------
-        //   🔥 MULTI FOTO FIX
-        // -------------------------
+        //   MULTI FOTO FIX
         List<String> urls = p.getImageUrls();
 
         if (urls != null && !urls.isEmpty()) {
@@ -96,7 +90,7 @@ public class ProductsAdapter extends RecyclerView.Adapter<ProductsAdapter.ViewHo
             h.image.setImageResource(R.drawable.bg_image_placeholder);
         }
 
-        // ❤️ FAVORITO
+        //  FAVORITO
         h.btnFavorite.setImageResource(
                 p.isFavorite()
                         ? R.drawable.ic_heart_filled

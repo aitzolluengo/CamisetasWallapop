@@ -69,9 +69,7 @@ public class OrderRepository {
         });
     }
 
-    /**
-     * Enviar oferta (crea documento en /products/{productId}/offers/{offerId})
-     */
+    //Enviar oferta (crea documento en /products/{productId}/offers/{offerId})
     public Task<Void> sendOffer(String productId, String chatId, String buyerId, int price) {
 
         String offerId = buyerId; // 1 oferta por comprador
@@ -162,9 +160,8 @@ public class OrderRepository {
                 .update("status", "rejected");
     }
 
-    /**
-     * Guardar shipping info en el producto (o podrías crear /orders/{id})
-     */
+    // Guardar shipping info en el producto (o podrías crear /orders/{id})
+
     public Task<Void> saveShippingInfo(String productId, String address, String postalCode, String phone) {
         Map<String, Object> data = new HashMap<>();
         data.put("shippingAddress", address);

@@ -142,9 +142,9 @@ public class SellFragment extends Fragment {
         return view;
     }
 
-    // ------------------------------------------------------------------------------------------- //
-    //                                      PICK MULTIPLE PHOTOS
-    // ------------------------------------------------------------------------------------------- //
+
+
+
     private void openGalleryMulti() {
         if (localPhotoUris.size() >= MAX_PHOTOS) {
             Toast.makeText(getContext(), "Máximo 6 fotos", Toast.LENGTH_SHORT).show();
@@ -186,9 +186,7 @@ public class SellFragment extends Fragment {
         }
     }
 
-    // ------------------------------------------------------------------------------------------- //
-    //                                        EXTRAS
-    // ------------------------------------------------------------------------------------------- //
+
     private void findExtraViews(View view) {
 
         layoutExtraCromo = view.findViewById(R.id.layoutExtraCromo);
@@ -253,9 +251,6 @@ public class SellFragment extends Fragment {
         });
     }
 
-    // ------------------------------------------------------------------------------------------- //
-    //                                    PUBLISH PRODUCT
-    // ------------------------------------------------------------------------------------------- //
     private void publishProduct() {
 
         if (localPhotoUris.isEmpty()) {
@@ -289,7 +284,6 @@ public class SellFragment extends Fragment {
         String productId = UUID.randomUUID().toString();
         long timestamp = System.currentTimeMillis();
 
-        // ------- EXTRAS --------
         Map<String, Object> extra = new HashMap<>();
 
         switch (selectedCategory) {

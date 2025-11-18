@@ -86,7 +86,7 @@ public class SearchResultsActivity extends AppCompatActivity {
                         }
                     }
 
-                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+
                     SecurityRepository securityRepo = new SecurityRepository(this);
                     List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
 
@@ -111,7 +111,6 @@ public class SearchResultsActivity extends AppCompatActivity {
                         }
                     }
 
-                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
                     SecurityRepository securityRepo = new SecurityRepository(this);
                     List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
 
@@ -121,7 +120,7 @@ public class SearchResultsActivity extends AppCompatActivity {
                         Toast.makeText(this, "Error en la búsqueda", Toast.LENGTH_SHORT).show());
     }
 
-    // ----------- FILTROS DINÁMICOS -----------
+    //  FILTROS DINÁMICOS
 
     private void openFiltersDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -259,11 +258,9 @@ public class SearchResultsActivity extends AppCompatActivity {
                                 break;
                         }
 
-                        // Si pasa todos los filtros, añadir
                         filtered.add(p);
                     }
 
-                    // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
                     SecurityRepository securityRepo = new SecurityRepository(this);
                     List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(filtered);
 

@@ -23,7 +23,7 @@ public class SecurityRepository {
         db = FirebaseFirestore.getInstance();
     }
 
-    // 🔒 Bloquear usuario
+    // Bloquear usuario
     public boolean blockUser(String userId, String userName) {
         try {
             Set<String> blockedUsers = getBlockedUsers();
@@ -35,18 +35,18 @@ public class SecurityRepository {
         }
     }
 
-    // ✅ Verificar si usuario está bloqueado
+    //  Verificar si usuario está bloqueado
     public boolean isUserBlocked(String userId) {
         Set<String> blockedUsers = getBlockedUsers();
         return blockedUsers.contains(userId);
     }
 
-    // 📋 Obtener lista de usuarios bloqueados
+    // Obtener lista de usuarios bloqueados
     public Set<String> getBlockedUsers() {
         return sharedPreferences.getStringSet(KEY_BLOCKED_USERS, new HashSet<>());
     }
 
-    // 📝 Reportar usuario
+    // Reportar usuario
     public void reportUser(String userId, String userName, String reportType, String description) {
         try {
             String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
@@ -70,7 +70,7 @@ public class SecurityRepository {
         }
     }
 
-    // 🔥 FILTRAR productos de usuarios no bloqueados
+    // FILTRAR productos de usuarios no bloqueados
     public List<Product> filterBlockedProducts(List<Product> products) {
         List<Product> filtered = new java.util.ArrayList<>();
         for (Product product : products) {

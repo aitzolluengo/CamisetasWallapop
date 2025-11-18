@@ -72,7 +72,7 @@ public class HomeFragment extends Fragment {
         });
         recyclerView.setAdapter(adapter);
 
-        // ⭐ IMPORTANTE: callback para reaccionar en tiempo real cuando cambia un favorito
+
         adapter.setOnFavoriteChangeListener(product -> {
 
             // actualizar fullList
@@ -121,7 +121,7 @@ public class HomeFragment extends Fragment {
 
             fullList = filtered;
 
-            // 🔥🔥🔥 NUEVO: FILTRAR productos de usuarios bloqueados
+
             SecurityRepository securityRepo = new SecurityRepository(requireContext());
             List<Product> sinUsuariosBloqueados = securityRepo.filterBlockedProducts(fullList);
             fullList = sinUsuariosBloqueados;
@@ -140,7 +140,7 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    /** Mostrar todos los productos */
+    // Mostrar todos los productos
     private void showAll() {
         adapter.updateProducts(fullList);
 
@@ -151,7 +151,7 @@ public class HomeFragment extends Fragment {
         btnFavs.setTextColor(0xFF444444);
     }
 
-    /** Mostrar solo favoritos */
+    // Mostrar solo favoritos
     private void showFavs() {
         adapter.updateProducts(favList);
 
