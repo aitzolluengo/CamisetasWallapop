@@ -19,6 +19,7 @@ import com.tzolas.camisetaswallapop.activities.MainActivity;
 import com.tzolas.camisetaswallapop.adapters.ChatListAdapter;
 import com.tzolas.camisetaswallapop.models.Chat;
 import com.tzolas.camisetaswallapop.models.ChatPreview;
+import com.tzolas.camisetaswallapop.repositories.SecurityRepository;
 
 import java.util.*;
 
@@ -27,6 +28,8 @@ public class ChatFragment extends Fragment {
     private RecyclerView recycler;
     private ChatListAdapter adapter;
     private final List<ChatPreview> chatList = new ArrayList<>();
+
+    private SecurityRepository securityRepository;
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private ListenerRegistration chatListener;
@@ -49,6 +52,8 @@ public class ChatFragment extends Fragment {
         recycler.setAdapter(adapter);
 
         myUid = FirebaseAuth.getInstance().getUid();
+
+        securityRepository = new SecurityRepository(requireContext());
 
         listenChatsRealtime();
 
@@ -89,6 +94,11 @@ public class ChatFragment extends Fragment {
 
         String chatId = chat.getId();
         String otherUid = chat.getUser1().equals(myUid) ? chat.getUser2() : chat.getUser1();
+
+        // 🔥 VERIFICAR si el usuario está bloqueado
+        if (securityRepository.isUserBlocked(otherUid)) {
+            return; // No cargar chat de usuario bloqueado
+        }
 
         db.collection("users").document(otherUid).get()
                 .addOnSuccessListener(userDoc -> {
@@ -221,5 +231,14 @@ public class ChatFragment extends Fragment {
         if (chatListener != null) chatListener.remove();
         for (ListenerRegistration l : messageListeners.values()) l.remove();
         messageListeners.clear();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Recargar chats por si se desbloqueó algún usuario
+        if (myUid != null) {
+            listenChatsRealtime();
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.tzolas.camisetaswallapop.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -38,6 +39,10 @@ public class BlockedUsersActivity extends AppCompatActivity {
             securityRepository.unblockUser(userId);
             loadBlockedUsers();
             Toast.makeText(this, "Usuario desbloqueado", Toast.LENGTH_SHORT).show();
+
+            // 🔥 NUEVO: Notificar que se desbloqueó un usuario
+            Intent broadcastIntent = new Intent("USER_UNBLOCKED");
+            sendBroadcast(broadcastIntent);
         });
         recyclerView.setAdapter(adapter);
 
