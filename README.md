@@ -1,4 +1,5 @@
-# EJECUTAR EL PROGRAMA
+# FutTrade
+## EJECUTAR EL PROGRAMA
 ### 1. Clonar el repositorio
   git clone https://github.com/tuusuario/CamisetasWallapop.git
 ### 2. Abrir el proyecto en Android Studio
@@ -21,7 +22,7 @@
   - Build clean proyect
   - Build assemble proyect
   - Pulsar Run en Android Studio
-# CARACTERÍSTICAS PRINCIPALES
+## CARACTERÍSTICAS PRINCIPALES
 - Usuarios
   -  Registro e inicio de sesión con Firebase
   -  Perfil editable (nombre + foto subida a Storage)
